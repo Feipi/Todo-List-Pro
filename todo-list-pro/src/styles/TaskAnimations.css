@@ -1,0 +1,86 @@
+/* 任务添加动画 */
+.task-add-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.task-add-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.task-add-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.task-add-exit-active {
+  opacity: 0;
+  transform: translateX(-100%);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* 任务完成动画 */
+.task-complete-enter {
+  transform: scale(1);
+}
+
+.task-complete-enter-active {
+  transform: scale(1.05);
+  transition: transform 200ms;
+}
+
+.task-complete-exit {
+  transform: scale(1.05);
+}
+
+.task-complete-exit-active {
+  transform: scale(1);
+  transition: transform 200ms;
+}
+
+/* 任务删除动画 */
+.task-delete-enter {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.task-delete-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.task-delete-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.task-delete-exit-active {
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* 列表项动画 */
+.list-item-enter {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.list-item-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.list-item-exit {
+  opacity: 1;
+}
+
+.list-item-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 300ms, transform 300ms;
+}

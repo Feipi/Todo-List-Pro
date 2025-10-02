@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, List, Input, Tag, Popconfirm, message, ColorPicker } from 'antd';
+import { Card, Button, List, Input, Tag, Popconfirm, message, ColorPicker, Tabs } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { saveTagsToLocalStorage, loadTagsFromLocalStorage } from '../utils/storage';
+import TagCloud from './TagCloud';
+
+const { TabPane } = Tabs;
 
 const TagManager = () => {
   const [tags, setTags] = useState([]);
@@ -60,62 +63,70 @@ const TagManager = () => {
 
   return (
     <Card title="标签管理" style={{ margin: '20px 0' }}>
-      <div style={{ marginBottom: '20px' }}>
-        <Input 
-          placeholder="标签名称" 
-          value={newTag.name}
-          onChange={(e) => setNewTag({...newTag, name: e.target.value})}
-          style={{ width: '200px', marginRight: '10px' }}
-        />
-        <ColorPicker
-          value={newTag.color}
-          onChange={(value) => setNewTag({...newTag, color: value.toHexString()})}
-          style={{ marginRight: '10px' }}
-        />
-        <Button type="primary" icon={<PlusOutlined />} onClick={addTag}>
-          添加标签
-        </Button>
-      </div>
-      
-      <List
-        dataSource={tags}
-        renderItem={tag => (
-          <List.Item
-            actions={[
-              <Button icon={<EditOutlined />} onClick={() => startEdit(tag)}>编辑</Button>,
-              <Popconfirm
-                title="确定要删除这个标签吗？"
-                onConfirm={() => deleteTag(tag.id)}
-                okText="确定"
-                cancelText="取消"
+      <Tabs defaultActiveKey="1">
+        <TabPane tab="标签列表" key="1">
+          <div style={{ marginBottom: '20px' }}>
+            <Input 
+              placeholder="标签名称" 
+              value={newTag.name}
+              onChange={(e) => setNewTag({...newTag, name: e.target.value})}
+              style={{ width: '200px', marginRight: '10px' }}
+            />
+            <ColorPicker
+              value={newTag.color}
+              onChange={(value) => setNewTag({...newTag, color: value.toHexString()})}
+              style={{ marginRight: '10px' }}
+            />
+            <Button type="primary" icon={<PlusOutlined />} onClick={addTag}>
+              添加标签
+            </Button>
+          </div>
+          
+          <List
+            dataSource={tags}
+            renderItem={tag => (
+              <List.Item
+                actions={[
+                  <Button icon={<EditOutlined />} onClick={() => startEdit(tag)}>编辑</Button>,
+                  <Popconfirm
+                    title="确定要删除这个标签吗？"
+                    onConfirm={() => deleteTag(tag.id)}
+                    okText="确定"
+                    cancelText="取消"
+                  >
+                    <Button icon={<DeleteOutlined />} danger>删除</Button>
+                  </Popconfirm>
+                ]}
               >
-                <Button icon={<DeleteOutlined />} danger>删除</Button>
-              </Popconfirm>
-            ]}
-          >
-            {editingTag && editingTag.id === tag.id ? (
-              <div style={{ width: '100%' }}>
-                <Input 
-                  value={editingTag.name}
-                  onChange={(e) => setEditingTag({...editingTag, name: e.target.value})}
-                  style={{ width: '200px', marginRight: '10px' }}
-                />
-                <ColorPicker
-                  value={editingTag.color}
-                  onChange={(value) => setEditingTag({...editingTag, color: value.toHexString()})}
-                  style={{ marginRight: '10px' }}
-                />
-                <Button type="primary" onClick={saveEdit}>保存</Button>
-                <Button onClick={() => setEditingTag(null)} style={{ marginLeft: '10px' }}>取消</Button>
-              </div>
-            ) : (
-              <>
-                <Tag color={tag.color}>{tag.name}</Tag>
-              </>
+                {editingTag && editingTag.id === tag.id ? (
+                  <div style={{ width: '100%' }}>
+                    <Input 
+                      value={editingTag.name}
+                      onChange={(e) => setEditingTag({...editingTag, name: e.target.value})}
+                      style={{ width: '200px', marginRight: '10px' }}
+                    />
+                    <ColorPicker
+                      value={editingTag.color}
+                      onChange={(value) => setEditingTag({...editingTag, color: value.toHexString()})}
+                      style={{ marginRight: '10px' }}
+                    />
+                    <Button type="primary" onClick={saveEdit}>保存</Button>
+                    <Button onClick={() => setEditingTag(null)} style={{ marginLeft: '10px' }}>取消</Button>
+                  </div>
+                ) : (
+                  <>
+                    <Tag color={tag.color}>{tag.name}</Tag>
+                  </>
+                )}
+              </List.Item>
             )}
-          </List.Item>
-        )}
-      />
+          />
+        </TabPane>
+        
+        <TabPane tab="标签云" key="2">
+          <TagCloud />
+        </TabPane>
+      </Tabs>
     </Card>
   );
 };
