@@ -1,70 +1,79 @@
-# Getting Started with Create React App
+# To-Do List Pro
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+一款轻量化、人性化、高适配性的个人任务管理工具。
 
-## Available Scripts
+## 功能特性
 
-In the project directory, you can run:
+### V1.0 基础功能
+- ✅ 任务添加、编辑、删除、标记完成/未完成
+- ✅ 标签管理（创建、编辑、删除、颜色设置）
+- ✅ 本地数据存储（LocalStorage）
+- ✅ 任务拖拽排序
 
-### `npm start`
+### V2.0 进阶功能
+- ✅ 任务优先级设置（高/中/低）
+- ✅ 任务提醒功能（自定义提醒时间，浏览器通知）
+- ✅ 用户登录/注册（JWT身份验证模拟）
+- ✅ 任务搜索与筛选（关键词搜索、标签筛选）
+- ✅ 统计分析（任务统计、优先级分布）
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 技术栈
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- React 18
+- Ant Design 5
+- react-dnd（拖拽功能）
+- moment.js（日期处理）
 
-### `npm test`
+## 安装与运行
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+# 安装依赖
+npm install
 
-### `npm run build`
+# 启动开发服务器
+npm start
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 使用说明
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. 首次使用需要注册/登录账户
+2. 在"任务管理"页面可以添加、编辑、删除任务
+3. 在"标签管理"页面可以管理任务标签
+4. 在"统计分析"页面可以查看任务统计数据
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 项目结构
 
-### `npm run eject`
+```
+src/
+├── components/          # 组件目录
+│   ├── TaskManager.js   # 任务管理组件
+│   ├── TagManager.js    # 标签管理组件
+│   ├── Statistics.js    # 统计分析组件
+│   └── Login.js         # 登录组件
+├── utils/               # 工具函数
+│   └── storage.js       # 本地存储工具
+├── App.js               # 主应用组件
+└── index.js             # 入口文件
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 开发计划
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### V3.0 人性化优化（待实现）
+- 任务模板库
+- 智能联想输入
+- 批量操作
+- 任务难度与情绪标注
+- 个性化时间视图
+- 逾期任务智能疏导
+- 任务依赖提醒
+- 轻量化复盘
+- 语音录入
+- 多人协作轻量化支持
+- 设备适配优化
+- 自定义快捷键和第三方联动
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 项目特点
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- 单人开发可控：技术栈轻量且模块化，支持分阶段迭代
+- 实用性优先：功能聚焦"真实使用场景"，避免冗余设计
+- 人性化体验：从操作、情绪、习惯多维度适配用户

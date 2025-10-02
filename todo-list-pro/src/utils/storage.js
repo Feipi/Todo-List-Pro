@@ -53,3 +53,40 @@ export const loadTagsFromLocalStorage = () => {
     return [];
   }
 };
+
+/**
+ * 保存用户数据到LocalStorage
+ * @param {Object} user 用户对象
+ */
+export const saveUserToLocalStorage = (user) => {
+  try {
+    localStorage.setItem('todoListPro_user', JSON.stringify(user));
+  } catch (error) {
+    console.error('保存用户到LocalStorage失败:', error);
+  }
+};
+
+/**
+ * 从LocalStorage获取用户数据
+ * @returns {Object} 用户对象
+ */
+export const loadUserFromLocalStorage = () => {
+  try {
+    const user = localStorage.getItem('todoListPro_user');
+    return user ? JSON.parse(user) : null;
+  } catch (error) {
+    console.error('从LocalStorage加载用户失败:', error);
+    return null;
+  }
+};
+
+/**
+ * 从LocalStorage删除用户数据
+ */
+export const removeUserFromLocalStorage = () => {
+  try {
+    localStorage.removeItem('todoListPro_user');
+  } catch (error) {
+    console.error('从LocalStorage删除用户失败:', error);
+  }
+};

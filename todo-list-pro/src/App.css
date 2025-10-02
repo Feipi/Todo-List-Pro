@@ -1,24 +1,94 @@
 .site-layout-content {
-  min-height: 280px;
-  padding: 24px;
   background: #fff;
+  padding: 24px;
   margin: 16px 0;
+  min-height: 280px;
 }
 
 .logo {
   float: left;
-  width: 120px;
-  height: 31px;
-  margin: 16px 24px 16px 0;
-  background: rgba(255, 255, 255, 0.3);
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  margin-right: 20px;
 }
 
-.ant-layout-header {
-  position: fixed;
-  width: 100%;
-  z-index: 1;
+/* 任务项样式优化 */
+.ant-list-item {
+  padding: 16px 0 !important;
+  border-bottom: 1px solid #f0f0f0 !important;
 }
 
-.ant-layout-content {
-  margin-top: 64px;
+.ant-list-item:hover {
+  background-color: #fafafa;
+  transition: background-color 0.3s;
+}
+
+/* 卡片样式优化 */
+.ant-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 按钮样式优化 */
+.ant-btn {
+  border-radius: 4px;
+}
+
+/* 输入框样式优化 */
+.ant-input,
+.ant-picker,
+.ant-select-selector {
+  border-radius: 4px !important;
+}
+
+/* 标签样式优化 */
+.ant-tag {
+  border-radius: 12px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+/* 统计数字样式 */
+.ant-statistic-content {
+  font-size: 24px !important;
+  font-weight: bold;
+}
+
+/* 登录页面样式 */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.login-card {
+  width: 400px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .site-layout-content {
+    padding: 12px;
+  }
+  
+  .login-card {
+    width: 90%;
+    margin: 0 auto;
+  }
+  
+  .ant-input,
+  .ant-picker,
+  .ant-select {
+    width: 100% !important;
+    margin-bottom: 10px;
+  }
+  
+  .ant-btn {
+    width: 100%;
+  }
 }

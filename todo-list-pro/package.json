@@ -1,7 +1,17 @@
 {
   "name": "todo-list-pro",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "private": true,
+  "description": "一款轻量化、人性化、高适配性的个人任务管理工具",
+  "keywords": [
+    "todo",
+    "task",
+    "management",
+    "react",
+    "antd"
+  ],
+  "author": "Qoder",
+  "license": "MIT",
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",

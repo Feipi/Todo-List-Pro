@@ -1,13 +1,55 @@
-import React, { useState } from 'react';
-import { Layout, Menu } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Layout, Menu, Button, message } from 'antd';
 import TaskManager from './components/TaskManager';
 import TagManager from './components/TagManager';
+import Statistics from './components/Statistics';
+import Login from './components/Login';
+import Guide from './components/Guide';
+import { loadUserFromLocalStorage, removeUserFromLocalStorage } from './utils/storage';
 import './App.css';
 
 const { Header, Content, Footer } = Layout;
 
 function App() {
   const [activeTab, setActiveTab] = useState('1');
+  const [user, setUser] = useState(null);
+  const [showGuide, setShowGuide] = useState(false);
+
+  // 组件挂载时检查用户登录状态
+  useEffect(() => {
+    const savedUser = loadUserFromLocalStorage();
+    if (savedUser) {
+      setUser(savedUser);
+    }
+    
+    // 检查是否显示新手引导
+    const guideShown = localStorage.getItem('todoListPro_guide_shown');
+    if (!guideShown) {
+      setShowGuide(true);
+    }
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    setActiveTab('1');
+  };
+
+  const handleLogout = () => {
+    removeUserFromLocalStorage();
+    setUser(null);
+    setActiveTab('1');
+    message.success('已退出登录');
+  };
+
+  const handleGuideClose = () => {
+    setShowGuide(false);
+    localStorage.setItem('todoListPro_guide_shown', 'true');
+  };
+
+  // 如果用户未登录，显示登录页面
+  if (!user) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -16,7 +58,7 @@ function App() {
       case '2':
         return <TagManager />;
       case '3':
-        return <div>统计分析功能正在开发中...</div>;
+        return <Statistics />;
       default:
         return <TaskManager />;
     }
@@ -25,17 +67,26 @@ function App() {
   return (
     <Layout className="layout">
       <Header>
-        <div className="logo" />
+        <div className="logo">To-Do List Pro</div>
         <Menu 
           theme="dark" 
           mode="horizontal" 
           defaultSelectedKeys={['1']} 
           selectedKeys={[activeTab]}
           onClick={({ key }) => setActiveTab(key)}
+          style={{ lineHeight: '64px' }}
         >
           <Menu.Item key="1">任务管理</Menu.Item>
           <Menu.Item key="2">标签管理</Menu.Item>
           <Menu.Item key="3">统计分析</Menu.Item>
+          <Menu.Item key="4" style={{ float: 'right' }}>
+            <Button type="link" onClick={() => setShowGuide(true)} style={{ color: 'white', marginRight: '20px' }}>
+              使用指南
+            </Button>
+            <Button type="link" onClick={handleLogout} style={{ color: 'white' }}>
+              退出登录 ({user.username})
+            </Button>
+          </Menu.Item>
         </Menu>
       </Header>
       <Content style={{ padding: '0 50px' }}>
@@ -44,6 +95,7 @@ function App() {
         </div>
       </Content>
       <Footer style={{ textAlign: 'center' }}>To-Do List Pro ©2025 Created by Qoder</Footer>
+      <Guide visible={showGuide} onClose={handleGuideClose} />
     </Layout>
   );
 }
