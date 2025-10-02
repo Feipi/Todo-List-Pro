@@ -257,6 +257,19 @@ const TaskManager = () => {
     if (titleInputRef.current) {
       titleInputRef.current.focus();
     }
+    
+    // 添加窗口焦点事件监听器，当用户回到页面时重新加载任务
+    const handleFocus = () => {
+      const loadedTasks = loadTasksFromLocalStorage();
+      setTasks(loadedTasks);
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    // 清理事件监听器
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // 键盘快捷键处理

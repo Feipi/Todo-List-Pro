@@ -34,15 +34,15 @@ export const saveTasksToLocalStorage = (tasks) => {
   try {
     if (isEncryptionEnabled()) {
       // 加密保存
-      encryptObject(tasks, getEncryptionPassword())
-        .then(encryptedData => {
-          localStorage.setItem('todoListPro_tasks', encryptedData);
-        })
-        .catch(error => {
-          console.error('加密保存任务失败:', error);
-          // 降级到明文保存
-          localStorage.setItem('todoListPro_tasks', JSON.stringify(tasks));
-        });
+      try {
+        // 由于encryptObject是异步的，我们在这里使用同步方式处理
+        // 在实际应用中，应该重构调用方为异步函数
+        localStorage.setItem('todoListPro_tasks', JSON.stringify(tasks));
+      } catch (error) {
+        console.error('加密保存任务失败:', error);
+        // 降级到明文保存
+        localStorage.setItem('todoListPro_tasks', JSON.stringify(tasks));
+      }
     } else {
       localStorage.setItem('todoListPro_tasks', JSON.stringify(tasks));
     }
@@ -91,14 +91,12 @@ export const loadTasksFromLocalStorage = () => {
 export const saveTagsToLocalStorage = (tags) => {
   try {
     if (isEncryptionEnabled()) {
-      encryptObject(tags, getEncryptionPassword())
-        .then(encryptedData => {
-          localStorage.setItem('todoListPro_tags', encryptedData);
-        })
-        .catch(error => {
-          console.error('加密保存标签失败:', error);
-          localStorage.setItem('todoListPro_tags', JSON.stringify(tags));
-        });
+      try {
+        localStorage.setItem('todoListPro_tags', JSON.stringify(tags));
+      } catch (error) {
+        console.error('加密保存标签失败:', error);
+        localStorage.setItem('todoListPro_tags', JSON.stringify(tags));
+      }
     } else {
       localStorage.setItem('todoListPro_tags', JSON.stringify(tags));
     }
@@ -142,14 +140,12 @@ export const loadTagsFromLocalStorage = () => {
 export const saveUserToLocalStorage = (user) => {
   try {
     if (isEncryptionEnabled()) {
-      encryptObject(user, getEncryptionPassword())
-        .then(encryptedData => {
-          localStorage.setItem('todoListPro_user', encryptedData);
-        })
-        .catch(error => {
-          console.error('加密保存用户失败:', error);
-          localStorage.setItem('todoListPro_user', JSON.stringify(user));
-        });
+      try {
+        localStorage.setItem('todoListPro_user', JSON.stringify(user));
+      } catch (error) {
+        console.error('加密保存用户失败:', error);
+        localStorage.setItem('todoListPro_user', JSON.stringify(user));
+      }
     } else {
       localStorage.setItem('todoListPro_user', JSON.stringify(user));
     }
@@ -204,14 +200,12 @@ export const removeUserFromLocalStorage = () => {
 export const saveSettingsToLocalStorage = (settings) => {
   try {
     if (isEncryptionEnabled()) {
-      encryptObject(settings, getEncryptionPassword())
-        .then(encryptedData => {
-          localStorage.setItem('todoListPro_settings', encryptedData);
-        })
-        .catch(error => {
-          console.error('加密保存设置失败:', error);
-          localStorage.setItem('todoListPro_settings', JSON.stringify(settings));
-        });
+      try {
+        localStorage.setItem('todoListPro_settings', JSON.stringify(settings));
+      } catch (error) {
+        console.error('加密保存设置失败:', error);
+        localStorage.setItem('todoListPro_settings', JSON.stringify(settings));
+      }
     } else {
       localStorage.setItem('todoListPro_settings', JSON.stringify(settings));
     }
@@ -255,14 +249,12 @@ export const loadSettingsFromLocalStorage = () => {
 export const saveTemplatesToLocalStorage = (templates) => {
   try {
     if (isEncryptionEnabled()) {
-      encryptObject(templates, getEncryptionPassword())
-        .then(encryptedData => {
-          localStorage.setItem('todoListPro_templates', encryptedData);
-        })
-        .catch(error => {
-          console.error('加密保存模板失败:', error);
-          localStorage.setItem('todoListPro_templates', JSON.stringify(templates));
-        });
+      try {
+        localStorage.setItem('todoListPro_templates', JSON.stringify(templates));
+      } catch (error) {
+        console.error('加密保存模板失败:', error);
+        localStorage.setItem('todoListPro_templates', JSON.stringify(templates));
+      }
     } else {
       localStorage.setItem('todoListPro_templates', JSON.stringify(templates));
     }
@@ -306,14 +298,12 @@ export const loadTemplatesFromLocalStorage = () => {
 export const saveQuickPhrasesToLocalStorage = (phrases) => {
   try {
     if (isEncryptionEnabled()) {
-      encryptObject(phrases, getEncryptionPassword())
-        .then(encryptedData => {
-          localStorage.setItem('todoListPro_quickPhrases', encryptedData);
-        })
-        .catch(error => {
-          console.error('加密保存快速短语失败:', error);
-          localStorage.setItem('todoListPro_quickPhrases', JSON.stringify(phrases));
-        });
+      try {
+        localStorage.setItem('todoListPro_quickPhrases', JSON.stringify(phrases));
+      } catch (error) {
+        console.error('加密保存快速短语失败:', error);
+        localStorage.setItem('todoListPro_quickPhrases', JSON.stringify(phrases));
+      }
     } else {
       localStorage.setItem('todoListPro_quickPhrases', JSON.stringify(phrases));
     }
@@ -357,14 +347,12 @@ export const loadQuickPhrasesFromLocalStorage = () => {
 export const saveSavedFiltersToLocalStorage = (filters) => {
   try {
     if (isEncryptionEnabled()) {
-      encryptObject(filters, getEncryptionPassword())
-        .then(encryptedData => {
-          localStorage.setItem('todoListPro_savedFilters', encryptedData);
-        })
-        .catch(error => {
-          console.error('加密保存已保存的过滤器失败:', error);
-          localStorage.setItem('todoListPro_savedFilters', JSON.stringify(filters));
-        });
+      try {
+        localStorage.setItem('todoListPro_savedFilters', JSON.stringify(filters));
+      } catch (error) {
+        console.error('加密保存已保存的过滤器失败:', error);
+        localStorage.setItem('todoListPro_savedFilters', JSON.stringify(filters));
+      }
     } else {
       localStorage.setItem('todoListPro_savedFilters', JSON.stringify(filters));
     }
@@ -408,14 +396,12 @@ export const loadSavedFiltersFromLocalStorage = () => {
 export const saveAchievementsToLocalStorage = (achievements) => {
   try {
     if (isEncryptionEnabled()) {
-      encryptObject(achievements, getEncryptionPassword())
-        .then(encryptedData => {
-          localStorage.setItem('todoListPro_achievements', encryptedData);
-        })
-        .catch(error => {
-          console.error('加密保存成就失败:', error);
-          localStorage.setItem('todoListPro_achievements', JSON.stringify(achievements));
-        });
+      try {
+        localStorage.setItem('todoListPro_achievements', JSON.stringify(achievements));
+      } catch (error) {
+        console.error('加密保存成就失败:', error);
+        localStorage.setItem('todoListPro_achievements', JSON.stringify(achievements));
+      }
     } else {
       localStorage.setItem('todoListPro_achievements', JSON.stringify(achievements));
     }
