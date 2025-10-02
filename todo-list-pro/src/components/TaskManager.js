@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, List, Typography, Input, DatePicker, Checkbox, Select, TimePicker, message, Tag, Collapse, Modal, Tabs } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined, SearchOutlined, CopyOutlined, UnorderedListOutlined, BellOutlined, ShareAltOutlined, AudioOutlined } from '@ant-design/icons';
-import { saveTasksToLocalStorage, loadTasksFromLocalStorage } from '../utils/storage';
+import { saveTasksToLocalStorage, loadTasksFromLocalStorage, loadTagsFromLocalStorage } from '../utils/storage';
 import moment from 'moment';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -240,6 +240,9 @@ const TaskManager = () => {
   
   // 输入框引用
   const titleInputRef = useRef(null);
+  
+  // 为每个任务创建独立的ref，避免findDOMNode问题
+  const taskRefs = useRef({});
 
   // 组件挂载时从LocalStorage加载任务和标签
   useEffect(() => {
@@ -247,7 +250,7 @@ const TaskManager = () => {
     setTasks(loadedTasks);
     
     // 加载标签
-    const loadedTags = JSON.parse(localStorage.getItem('todoListPro_tags') || '[]');
+    const loadedTags = loadTagsFromLocalStorage();
     setTags(loadedTags);
     
     // 聚焦到标题输入框
@@ -767,158 +770,167 @@ const TaskManager = () => {
             
             {/* 任务列表 */}
             <TransitionGroup>
-              {filteredTasks.map((task, index) => (
-                <CSSTransition
-                  key={task.id}
-                  timeout={300}
-                  classNames="list-item"
-                >
-                  <div>
-                    {editingTask && editingTask.id === task.id ? (
-                      <List.Item
-                        actions={[
-                          <Button icon={<EditOutlined />} onClick={saveEdit}>保存 (Ctrl+S)</Button>,
-                          <Button onClick={() => {
-                            setEditingTask(null);
-                            setCurrentSubTasks([]);
-                          }}>取消 (ESC)</Button>
-                        ]}
-                      >
-                        <div style={{ width: '100%' }}>
-                          <Input 
-                            value={editingTask.title}
-                            onChange={(e) => setEditingTask({...editingTask, title: e.target.value})}
-                            style={{ width: '200px', marginRight: '10px' }}
-                            onPressEnter={saveEdit}
-                          />
-                          <DatePicker 
-                            value={editingTask.dueDate}
-                            onChange={(date) => setEditingTask({...editingTask, dueDate: date})}
-                            style={{ marginRight: '10px' }}
-                          />
-                          <Select
-                            value={editingTask.priority}
-                            onChange={(value) => setEditingTask({...editingTask, priority: value})}
-                            style={{ width: '100px', marginRight: '10px' }}
-                          >
-                            <Option value="high">高</Option>
-                            <Option value="medium">中</Option>
-                            <Option value="low">低</Option>
-                          </Select>
-                          <TimePicker
-                            value={editingTask.remindTime}
-                            onChange={(time) => setEditingTask({...editingTask, remindTime: time})}
-                            style={{ marginRight: '10px' }}
-                          />
-                          <br /><br />
-                          <Select
-                            mode="multiple"
-                            placeholder="选择标签"
-                            value={editingTask.tagIds}
-                            onChange={(value) => setEditingTask({...editingTask, tagIds: value})}
-                            style={{ width: '300px', marginRight: '10px' }}
-                          >
-                            {tags.map(tag => (
-                              <Option key={tag.id} value={tag.id}>
-                                <Tag color={tag.color}>{tag.name}</Tag>
-                              </Option>
-                            ))}
-                          </Select>
-                          <br /><br />
-                          
-                          {/* 编辑子任务 */}
-                          <div style={{ marginBottom: '20px' }}>
-                            <h4>子任务</h4>
-                            <div style={{ display: 'flex', marginBottom: '10px' }}>
-                              <Input 
-                                placeholder="添加子任务" 
-                                value={newSubTask}
-                                onChange={(e) => setNewSubTask(e.target.value)}
-                                style={{ flex: 1, marginRight: '10px' }}
-                                onPressEnter={addSubTask}
-                              />
-                              <Button onClick={addSubTask}>添加</Button>
-                            </div>
-                            {currentSubTasks.map(subTask => (
-                              <div key={subTask.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
-                                <Checkbox 
-                                  checked={subTask.completed} 
-                                  onChange={() => toggleSubTaskComplete(subTask.id)} 
-                                  style={{ marginRight: '10px' }}
+              {filteredTasks.map((task, index) => {
+                // 确保每个任务都有对应的ref
+                if (!taskRefs.current[task.id]) {
+                  taskRefs.current[task.id] = React.createRef();
+                }
+                
+                return (
+                  <CSSTransition
+                    key={task.id}
+                    timeout={300}
+                    classNames="list-item"
+                    nodeRef={taskRefs.current[task.id]}
+                  >
+                    <div ref={taskRefs.current[task.id]}>
+                      {editingTask && editingTask.id === task.id ? (
+                        <List.Item
+                          actions={[
+                            <Button icon={<EditOutlined />} onClick={saveEdit}>保存 (Ctrl+S)</Button>,
+                            <Button onClick={() => {
+                              setEditingTask(null);
+                              setCurrentSubTasks([]);
+                            }}>取消 (ESC)</Button>
+                          ]}
+                        >
+                          <div style={{ width: '100%' }}>
+                            <Input 
+                              value={editingTask.title}
+                              onChange={(e) => setEditingTask({...editingTask, title: e.target.value})}
+                              style={{ width: '200px', marginRight: '10px' }}
+                              onPressEnter={saveEdit}
+                            />
+                            <DatePicker 
+                              value={editingTask.dueDate}
+                              onChange={(date) => setEditingTask({...editingTask, dueDate: date})}
+                              style={{ marginRight: '10px' }}
+                            />
+                            <Select
+                              value={editingTask.priority}
+                              onChange={(value) => setEditingTask({...editingTask, priority: value})}
+                              style={{ width: '100px', marginRight: '10px' }}
+                            >
+                              <Option value="high">高</Option>
+                              <Option value="medium">中</Option>
+                              <Option value="low">低</Option>
+                            </Select>
+                            <TimePicker
+                              value={editingTask.remindTime}
+                              onChange={(time) => setEditingTask({...editingTask, remindTime: time})}
+                              style={{ marginRight: '10px' }}
+                            />
+                            <br /><br />
+                            <Select
+                              mode="multiple"
+                              placeholder="选择标签"
+                              value={editingTask.tagIds}
+                              onChange={(value) => setEditingTask({...editingTask, tagIds: value})}
+                              style={{ width: '300px', marginRight: '10px' }}
+                            >
+                              {tags.map(tag => (
+                                <Option key={tag.id} value={tag.id}>
+                                  <Tag color={tag.color}>{tag.name}</Tag>
+                                </Option>
+                              ))}
+                            </Select>
+                            <br /><br />
+                            
+                            {/* 编辑子任务 */}
+                            <div style={{ marginBottom: '20px' }}>
+                              <h4>子任务</h4>
+                              <div style={{ display: 'flex', marginBottom: '10px' }}>
+                                <Input 
+                                  placeholder="添加子任务" 
+                                  value={newSubTask}
+                                  onChange={(e) => setNewSubTask(e.target.value)}
+                                  style={{ flex: 1, marginRight: '10px' }}
+                                  onPressEnter={addSubTask}
                                 />
-                                <span style={{ textDecoration: subTask.completed ? 'line-through' : 'none', flex: 1 }}>
-                                  {subTask.title}
-                                </span>
-                                <Button 
-                                  icon={<EditOutlined />} 
-                                  size="small" 
-                                  onClick={() => editSubTask(subTask)} 
-                                  style={{ marginRight: '5px' }}
-                                />
-                                <Button 
-                                  icon={<DeleteOutlined />} 
-                                  size="small" 
-                                  danger 
-                                  onClick={() => deleteSubTask(subTask.id)}
-                                />
+                                <Button onClick={addSubTask}>添加</Button>
                               </div>
-                            ))}
-                          </div>
-                          
-                          {/* 评论区域 */}
-                          <div style={{ marginBottom: '20px' }}>
-                            <h4>任务评论</h4>
-                            <TaskComments 
-                              taskId={editingTask.id}
-                              comments={editingTask.comments || []}
-                              onAddComment={(comment) => {
-                                const updatedComments = editingTask.comments 
-                                  ? [...editingTask.comments, comment] 
-                                  : [comment];
-                                setEditingTask({ ...editingTask, comments: updatedComments });
-                              }}
+                              {currentSubTasks.map(subTask => (
+                                <div key={subTask.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                                  <Checkbox 
+                                    checked={subTask.completed} 
+                                    onChange={() => toggleSubTaskComplete(subTask.id)} 
+                                    style={{ marginRight: '10px' }}
+                                  />
+                                  <span style={{ textDecoration: subTask.completed ? 'line-through' : 'none', flex: 1 }}>
+                                    {subTask.title}
+                                  </span>
+                                  <Button 
+                                    icon={<EditOutlined />} 
+                                    size="small" 
+                                    onClick={() => editSubTask(subTask)} 
+                                    style={{ marginRight: '5px' }}
+                                  />
+                                  <Button 
+                                    icon={<DeleteOutlined />} 
+                                    size="small" 
+                                    danger 
+                                    onClick={() => deleteSubTask(subTask.id)}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {/* 评论区域 */}
+                            <div style={{ marginBottom: '20px' }}>
+                              <h4>任务评论</h4>
+                              <TaskComments 
+                                taskId={editingTask.id}
+                                comments={editingTask.comments || []}
+                                onAddComment={(comment) => {
+                                  const updatedComments = editingTask.comments 
+                                    ? [...editingTask.comments, comment] 
+                                    : [comment];
+                                  setEditingTask({ ...editingTask, comments: updatedComments });
+                                }}
+                              />
+                            </div>
+                            
+                            <Button type="primary" onClick={saveEdit}>保存 (Ctrl+S)</Button>
+                            <Button onClick={() => {
+                              setEditingTask(null);
+                              setCurrentSubTasks([]);
+                            }} style={{ marginLeft: '10px' }}>取消 (ESC)</Button>
+                            <TextArea 
+                              value={editingTask.description}
+                              onChange={(e) => setEditingTask({...editingTask, description: e.target.value})}
+                              rows={2}
+                              style={{ width: '500px', marginTop: '10px' }}
+                              onPressEnter={saveEdit}
                             />
                           </div>
-                          
-                          <Button type="primary" onClick={saveEdit}>保存 (Ctrl+S)</Button>
-                          <Button onClick={() => {
-                            setEditingTask(null);
-                            setCurrentSubTasks([]);
-                          }} style={{ marginLeft: '10px' }}>取消 (ESC)</Button>
-                          <TextArea 
-                            value={editingTask.description}
-                            onChange={(e) => setEditingTask({...editingTask, description: e.target.value})}
-                            rows={2}
-                            style={{ width: '500px', marginTop: '10px' }}
-                            onPressEnter={saveEdit}
-                          />
-                        </div>
-                      </List.Item>
-                    ) : (
-                      <CSSTransition
-                        key={task.id}
-                        timeout={300}
-                        classNames="task-add"
-                      >
-                        <div>
-                          <TaskItem 
-                            task={task}
-                            index={index}
-                            moveTask={moveTask}
-                            startEdit={startEdit}
-                            deleteTask={deleteTask}
-                            toggleComplete={toggleComplete}
-                            allTags={tags}
-                            onDoubleClick={handleTaskDoubleClick}
-                            selected={selectedTasks.includes(task.id)}
-                            onSelect={handleTaskSelect}
-                          />
-                        </div>
-                      </CSSTransition>
-                    )}
-                  </div>
-                </CSSTransition>
-              ))}
+                        </List.Item>
+                      ) : (
+                        <CSSTransition
+                          key={task.id}
+                          timeout={300}
+                          classNames="task-add"
+                          nodeRef={taskRefs.current[task.id]}
+                        >
+                          <div ref={taskRefs.current[task.id]}>
+                            <TaskItem 
+                              task={task}
+                              index={index}
+                              moveTask={moveTask}
+                              startEdit={startEdit}
+                              deleteTask={deleteTask}
+                              toggleComplete={toggleComplete}
+                              allTags={tags}
+                              onDoubleClick={handleTaskDoubleClick}
+                              selected={selectedTasks.includes(task.id)}
+                              onSelect={handleTaskSelect}
+                            />
+                          </div>
+                        </CSSTransition>
+                      )}
+                    </div>
+                  </CSSTransition>
+                );
+              })}
             </TransitionGroup>
           </TabPane>
           

@@ -152,6 +152,7 @@ function App() {
           defaultSelectedKeys={['1']} 
           selectedKeys={[activeTab]}
           style={{ lineHeight: '64px' }}
+          onClick={({ key }) => setActiveTab(key)}
         >
           <Menu.Item key="1">任务管理</Menu.Item>
           <Menu.Item key="2">标签管理</Menu.Item>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Storage Test</title>
+</head>
+<body>
+    <h1>LocalStorage测试</h1>
+    <button onclick="saveTest()">保存测试数据</button>
+    <button onclick="loadTest()">加载测试数据</button>
+    <button onclick="checkEncryption()">检查加密状态</button>
+    <div id="result"></div>
+
+    <script>
+        function saveTest() {
+            const testData = [{id: 1, title: "测试任务", completed: false}];
+            localStorage.setItem('todoListPro_tasks', JSON.stringify(testData));
+            document.getElementById('result').innerHTML = '数据已保存';
+        }
+
+        function loadTest() {
+            const tasks = localStorage.getItem('todoListPro_tasks');
+            if (tasks) {
+                const parsed = JSON.parse(tasks);
+                document.getElementById('result').innerHTML = '加载数据: ' + JSON.stringify(parsed);
+            } else {
+                document.getElementById('result').innerHTML = '没有找到数据';
+            }
+        }
+
+        function checkEncryption() {
+            const encryptionEnabled = localStorage.getItem('todoListPro_encryption_enabled');
+            document.getElementById('result').innerHTML = '加密状态: ' + encryptionEnabled;
+        }
+    </script>
+</body>
+</html>
