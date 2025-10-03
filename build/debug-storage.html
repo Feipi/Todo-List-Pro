@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Storage</title>
+</head>
+<body>
+    <h1>调试LocalStorage</h1>
+    <button onclick="checkAllStorage()">检查所有存储数据</button>
+    <button onclick="clearAllStorage()">清空所有存储数据</button>
+    <button onclick="createTestTask()">创建测试任务</button>
+    <div id="result"></div>
+
+    <script>
+        function checkAllStorage() {
+            const result = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                try {
+                    result[key] = JSON.parse(value);
+                } catch (e) {
+                    result[key] = value;
+                }
+            }
+            document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+        }
+
+        function clearAllStorage() {
+            localStorage.clear();
+            document.getElementById('result').innerHTML = '所有存储数据已清空';
+        }
+
+        function createTestTask() {
+            const tasks = JSON.parse(localStorage.getItem('todoListPro_tasks') || '[]');
+            const newTask = {
+                id: Date.now(),
+                title: '测试任务 ' + Date.now(),
+                description: '这是一个测试任务',
+                completed: false,
+                dueDate: '',
+                priority: 'medium',
+                remindTime: '',
+                tagIds: [],
+                subTasks: [],
+                dependencies: [],
+                projectId: null,
+                comments: []
+            };
+            tasks.push(newTask);
+            localStorage.setItem('todoListPro_tasks', JSON.stringify(tasks));
+            document.getElementById('result').innerHTML = '测试任务已创建';
+        }
+    </script>
+</body>
+</html>
