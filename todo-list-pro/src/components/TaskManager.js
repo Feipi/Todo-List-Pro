@@ -440,7 +440,7 @@ const TaskManager = () => {
   const isValidDueDate = (date) => {
     if (!date) return true; // 允许没有截止日期
     const today = moment().startOf('day');
-    return date.isSameOrAfter(today);
+    return date.isSame(today, 'day') || date.isAfter(today, 'day');
   };
 
   const addTask = () => {
