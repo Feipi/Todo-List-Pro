@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Button, message, Dropdown, Space } from 'antd';
+import { Layout, Menu, Button, message, Dropdown } from 'antd';
 import { DownOutlined, TrophyOutlined, LockOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import TaskManager from './components/TaskManager';
 import TagManager from './components/TagManager';
@@ -153,6 +153,16 @@ function App() {
     { key: '1', label: '任务管理' },
     { key: '2', label: '标签管理' },
     { key: '3', label: '统计分析' },
+    {
+      key: 'views',
+      label: (
+        <Dropdown menu={viewMenu}>
+          <Button type="link" style={{ color: 'white' }}>
+            视图切换 <DownOutlined />
+          </Button>
+        </Dropdown>
+      )
+    },
     { key: '7', label: '设置' },
     { 
       key: '8', 
@@ -207,16 +217,13 @@ function App() {
           style={{ lineHeight: '64px' }}
           items={mainMenuItems}
           onClick={({ key }) => {
+            // 特殊处理视图切换下拉菜单
+            if (key === 'views') return;
             // 特殊处理右侧按钮
             if (key === '11') return;
             setActiveTab(key);
           }}
         />
-        <Dropdown menu={viewMenu}>
-          <Button type="link" style={{ color: 'white', marginLeft: '10px' }}>
-            视图切换 <DownOutlined />
-          </Button>
-        </Dropdown>
       </Header>
       <Content style={{ padding: '0 50px' }}>
         <div className="site-layout-content">
