@@ -1,5 +1,6 @@
 // services/syncService.js
-import { getAllData, addData, updateData, deleteData } from '../utils/indexedDB';
+import { getAllData, addData, updateData, deleteData, getDataByUserId } from '../utils/indexedDB';
+import useTodoStore from '../store/todoStore';
 import ApiService from './apiService';
 
 // 模拟API端点
@@ -124,28 +125,55 @@ export const performFullSync = async (localTasks, localTags) => {
   }
 };
 
-// 同步到IndexedDB
+// 同步到IndexedDB（使用用户特定的数据）
 export const syncToIndexedDB = async (tasks, tags) => {
   try {
-    // 清空现有数据
-    // await clearStore('tasks');
-    // await clearStore('tags');
+    // 获取当前用户
+    const user = useTodoStore.getState().user;
+    if (!user) {
+      return { success: false, error: '用户未登录' };
+    }
     
-    // 添加任务到IndexedDB
+    // 清空当前用户的数据
+    // 注意：这里应该使用用户特定的清理方法，但我们已经在dataManager中处理了
+    
+    // 添加任务到IndexedDB（包含用户ID）
     for (const task of tasks) {
       try {
-        await addData('tasks', task);
+        const taskWithUserId = { ...task, userId: user.id };
+        await addData('tasks', taskWithUserId);
       } catch (error) {
-        console.warn('添加任务到IndexedDB失败:', error);
+        if (error.name === 'ConstraintError') {
+          // 如果是主键冲突，尝试更新而不是添加
+          try {
+            const taskWithUserId = { ...task, userId: user.id };
+            await updateData('tasks', task.id, taskWithUserId);
+          } catch (updateError) {
+            console.warn('更新任务到IndexedDB失败:', updateError);
+          }
+        } else {
+          console.warn('添加任务到IndexedDB失败:', error);
+        }
       }
     }
     
-    // 添加标签到IndexedDB
+    // 添加标签到IndexedDB（包含用户ID）
     for (const tag of tags) {
       try {
-        await addData('tags', tag);
+        const tagWithUserId = { ...tag, userId: user.id };
+        await addData('tags', tagWithUserId);
       } catch (error) {
-        console.warn('添加标签到IndexedDB失败:', error);
+        if (error.name === 'ConstraintError') {
+          // 如果是主键冲突，尝试更新而不是添加
+          try {
+            const tagWithUserId = { ...tag, userId: user.id };
+            await updateData('tags', tag.id, tagWithUserId);
+          } catch (updateError) {
+            console.warn('更新标签到IndexedDB失败:', updateError);
+          }
+        } else {
+          console.warn('添加标签到IndexedDB失败:', error);
+        }
       }
     }
     
@@ -155,11 +183,17 @@ export const syncToIndexedDB = async (tasks, tags) => {
   }
 };
 
-// 从IndexedDB加载数据
+// 从IndexedDB加载数据（使用用户特定的数据）
 export const loadFromIndexedDB = async () => {
   try {
-    const tasks = await getAllData('tasks');
-    const tags = await getAllData('tags');
+    // 获取当前用户
+    const user = useTodoStore.getState().user;
+    if (!user) {
+      return { tasks: [], tags: [] };
+    }
+    
+    const tasks = await getDataByUserId('tasks', user.id);
+    const tags = await getDataByUserId('tags', user.id);
     return { tasks, tags };
   } catch (error) {
     console.error('从IndexedDB加载数据失败:', error);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Form, Input, Button, message, Tabs } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
-import { saveUserToLocalStorage } from '../utils/storage';
+import { registerUser, findUserByUsername, validateUserPassword, saveCurrentUser } from '../utils/userDB';
 
 const { TabPane } = Tabs;
 
@@ -9,40 +9,76 @@ const Login = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
 
-  const handleLogin = (values) => {
+  const handleLogin = async (values) => {
     setLoading(true);
-    // 模拟登录请求
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // 查找用户
+      const user = await findUserByUsername(values.username);
+      
+      if (!user) {
+        message.error('用户不存在');
+        setLoading(false);
+        return;
+      }
+      
+      // 验证密码
+      if (!validateUserPassword(user, values.password)) {
+        message.error('密码错误');
+        setLoading(false);
+        return;
+      }
+      
       // 保存用户信息到localStorage
-      const user = {
-        id: Date.now(),
-        username: values.username,
-        email: values.email || '',
+      const userToSave = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
         token: 'fake-jwt-token-' + Date.now()
       };
-      saveUserToLocalStorage(user);
+      
+      saveCurrentUser(userToSave);
       message.success('登录成功');
-      onLogin(user);
-    }, 1000);
+      onLogin(userToSave);
+    } catch (error) {
+      console.error('登录失败:', error);
+      message.error('登录失败: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRegister = (values) => {
+  const handleRegister = async (values) => {
     setLoading(true);
-    // 模拟注册请求
-    setTimeout(() => {
-      setLoading(false);
-      // 保存用户信息到localStorage
-      const user = {
-        id: Date.now(),
+    try {
+      // 创建用户数据
+      const userData = {
+        id: Date.now() + Math.random(), // 简单的ID生成方式
         username: values.username,
         email: values.email,
+        password: values.password, // 在实际应用中，这里应该加密密码
+        createdAt: new Date().toISOString()
+      };
+      
+      // 注册用户
+      await registerUser(userData);
+      
+      // 保存用户信息到localStorage
+      const userToSave = {
+        id: userData.id,
+        username: userData.username,
+        email: userData.email,
         token: 'fake-jwt-token-' + Date.now()
       };
-      saveUserToLocalStorage(user);
+      
+      saveCurrentUser(userToSave);
       message.success('注册成功');
-      onLogin(user);
-    }, 1000);
+      onLogin(userToSave);
+    } catch (error) {
+      console.error('注册失败:', error);
+      message.error('注册失败: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -87,7 +123,11 @@ const Login = ({ onLogin }) => {
             >
               <Form.Item
                 name="username"
-                rules={[{ required: true, message: '请输入用户名' }]}
+                rules={[
+                  { required: true, message: '请输入用户名' },
+                  { min: 3, message: '用户名至少3个字符' },
+                  { max: 20, message: '用户名最多20个字符' }
+                ]}
               >
                 <Input prefix={<UserOutlined />} placeholder="用户名" />
               </Form.Item>
@@ -102,7 +142,10 @@ const Login = ({ onLogin }) => {
               </Form.Item>
               <Form.Item
                 name="password"
-                rules={[{ required: true, message: '请输入密码' }]}
+                rules={[
+                  { required: true, message: '请输入密码' },
+                  { min: 6, message: '密码至少6个字符' }
+                ]}
               >
                 <Input.Password prefix={<LockOutlined />} placeholder="密码" />
               </Form.Item>

@@ -15,6 +15,7 @@ import EnhancedCloudSync from './components/EnhancedCloudSync';
 import DataEncryption from './components/DataEncryption';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
 import useTodoStore from './store/todoStore';
+import { loadCurrentUser } from './utils/userDB';
 import './App.css';
 
 const { Header, Content, Footer } = Layout;
@@ -24,6 +25,7 @@ function App() {
   const user = useTodoStore(state => state.user);
   const setUser = useTodoStore(state => state.setUser);
   const logout = useTodoStore(state => state.logout);
+  const initialize = useTodoStore(state => state.initialize);
   
   const [showGuide, setShowGuide] = useState(false);
   const [theme, setTheme] = useState('light');
@@ -32,19 +34,15 @@ function App() {
 
   // 组件挂载时检查用户登录状态
   useEffect(() => {
-    // 这里可以实现从持久化存储加载用户信息的逻辑
-    // 为简化，我们使用一个模拟的用户对象
-    // const savedUser = loadUserFromLocalStorage();
-    // if (savedUser) {
-    //   setUser(savedUser);
-    // }
+    // 初始化用户状态
+    initialize();
     
     // 检查是否显示新手引导
     const guideShown = localStorage.getItem('todoListPro_guide_shown');
     if (!guideShown) {
       setShowGuide(true);
     }
-  }, [setUser]);
+  }, [initialize]);
 
   // 键盘快捷键处理
   useEffect(() => {
@@ -137,14 +135,65 @@ function App() {
     }
   };
 
-  const viewMenu = (
-    <Menu onClick={({ key }) => setActiveTab(key)}>
-      <Menu.Item key="1">列表视图</Menu.Item>
-      <Menu.Item key="4">日历视图</Menu.Item>
-      <Menu.Item key="5">看板视图</Menu.Item>
-      <Menu.Item key="6">时间轴视图</Menu.Item>
-    </Menu>
-  );
+  // 使用新的items API替换旧的children API
+  const menuItems = [
+    { key: '1', label: '列表视图' },
+    { key: '4', label: '日历视图' },
+    { key: '5', label: '看板视图' },
+    { key: '6', label: '时间轴视图' }
+  ];
+
+  const viewMenu = {
+    items: menuItems,
+    onClick: ({ key }) => setActiveTab(key)
+  };
+
+  // 主菜单项
+  const mainMenuItems = [
+    { key: '1', label: '任务管理' },
+    { key: '2', label: '标签管理' },
+    { key: '3', label: '统计分析' },
+    { key: '7', label: '设置' },
+    { 
+      key: '8', 
+      label: (
+        <>
+          <TrophyOutlined /> 成就
+        </>
+      )
+    },
+    { key: '9', label: '云同步' },
+    { 
+      key: '10', 
+      label: (
+        <>
+          <LockOutlined /> 安全与隐私
+        </>
+      )
+    },
+    { 
+      key: '11', 
+      label: (
+        <>
+          <Button 
+            type="link" 
+            onClick={() => setShowShortcuts(true)} 
+            style={{ color: 'white', marginRight: '20px' }}
+            icon={<QuestionCircleOutlined />}
+          >
+            快捷键
+          </Button>
+          <Button type="link" onClick={() => setShowGuide(true)} style={{ color: 'white', marginRight: '20px' }}>
+            使用指南
+          </Button>
+          <Button type="link" onClick={handleLogout} style={{ color: 'white' }}>
+            退出登录 ({user.username})
+          </Button>
+        </>
+      ),
+      style: { float: 'right' }
+    }
+  ];
 
   return (
     <Layout className={`layout ${theme} ${layout}`}>
@@ -156,44 +205,18 @@ function App() {
           defaultSelectedKeys={['1']} 
           selectedKeys={[activeTab]}
           style={{ lineHeight: '64px' }}
-          onClick={({ key }) => setActiveTab(key)}
-        >
-          <Menu.Item key="1">任务管理</Menu.Item>
-          <Menu.Item key="2">标签管理</Menu.Item>
-          <Menu.Item key="3">统计分析</Menu.Item>
-          <Dropdown overlay={viewMenu}>
-            <Menu.Item>
-              <Space>
-                视图切换
-                <DownOutlined />
-              </Space>
-            </Menu.Item>
-          </Dropdown>
-          <Menu.Item key="7">设置</Menu.Item>
-          <Menu.Item key="8">
-            <TrophyOutlined /> 成就
-          </Menu.Item>
-          <Menu.Item key="9">云同步</Menu.Item>
-          <Menu.Item key="10">
-            <LockOutlined /> 安全与隐私
-          </Menu.Item>
-          <Menu.Item key="11" style={{ float: 'right' }}>
-            <Button 
-              type="link" 
-              onClick={() => setShowShortcuts(true)} 
-              style={{ color: 'white', marginRight: '20px' }}
-              icon={<QuestionCircleOutlined />}
-            >
-              快捷键
-            </Button>
-            <Button type="link" onClick={() => setShowGuide(true)} style={{ color: 'white', marginRight: '20px' }}>
-              使用指南
-            </Button>
-            <Button type="link" onClick={handleLogout} style={{ color: 'white' }}>
-              退出登录 ({user.username})
-            </Button>
-          </Menu.Item>
-        </Menu>
+          items={mainMenuItems}
+          onClick={({ key }) => {
+            // 特殊处理右侧按钮
+            if (key === '11') return;
+            setActiveTab(key);
+          }}
+        />
+        <Dropdown menu={viewMenu}>
+          <Button type="link" style={{ color: 'white', marginLeft: '10px' }}>
+            视图切换 <DownOutlined />
+          </Button>
+        </Dropdown>
       </Header>
       <Content style={{ padding: '0 50px' }}>
         <div className="site-layout-content">

@@ -24,7 +24,6 @@ const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 const { Panel } = Collapse;
-const { TabPane } = Tabs;
 
 // 子任务组件
 const SubTaskItem = ({ subTask, onToggle, onDelete, onEdit }) => {
@@ -644,310 +643,319 @@ const TaskManager = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <Card title="任务管理" style={{ margin: '20px 0' }}>
-        <Tabs defaultActiveKey="1">
-          <TabPane tab="桌面版" key="1">
-            {/* 增强搜索区域 */}
-            <EnhancedSearch 
-              tasks={tasks}
-              tags={tags}
-              onSearch={handleSearch}
-              onFilter={handleFilter}
-            />
-            
-            {/* 批量操作区域 */}
-            <div style={{ marginBottom: '20px' }}>
-              <Checkbox 
-                onChange={(e) => toggleSelectAll(e.target.checked)}
-                checked={selectedTasks.length === filteredTasks.length && filteredTasks.length > 0}
-                style={{ marginRight: '10px' }}
-              >
-                全选
-              </Checkbox>
-              <BatchOperations 
-                selectedTasks={selectedTasks} 
-                deleteTasks={deleteTasks}
-                updateTasks={updateTasks}
-                tags={tags} 
-              />
-            </div>
-            
-            {/* 添加任务区域 */}
-            <Collapse style={{ marginBottom: '20px' }}>
-              <Panel header="任务模板" key="1">
-                <TaskTemplates onApplyTemplate={handleApplyTemplate} />
-              </Panel>
-              <Panel header="智能提醒" key="2">
-                <SmartReminders />
-              </Panel>
-              <Panel header="快速短语" key="3">
-                <QuickPhrases onApplyPhrase={handleApplyPhrase} />
-              </Panel>
-              <Panel header="任务分享" key="4">
-                <TaskSharing />
-              </Panel>
-              <Panel header="任务依赖" key="5">
-                <TaskDependencies />
-              </Panel>
-              <Panel header="项目管理" key="6">
-                <ProjectManager />
-              </Panel>
-            </Collapse>
-            
-            <div style={{ marginBottom: '20px' }}>
-              <Input 
-                ref={titleInputRef}
-                placeholder="任务标题" 
-                value={newTask.title}
-                onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                style={{ width: '200px', marginRight: '10px' }}
-                suffix={<VoiceInput onTranscript={handleVoiceInput} />}
-              />
-              <DatePicker 
-                placeholder="截止日期"
-                onChange={(date) => setNewTask({...newTask, dueDate: date})}
-                style={{ marginRight: '10px' }}
-              />
-              <Select
-                value={newTask.priority}
-                onChange={(value) => setNewTask({...newTask, priority: value})}
-                style={{ width: '100px', marginRight: '10px' }}
-              >
-                <Option value="high">高</Option>
-                <Option value="medium">中</Option>
-                <Option value="low">低</Option>
-              </Select>
-              <TimePicker
-                placeholder="提醒时间"
-                onChange={(time) => setNewTask({...newTask, remindTime: time})}
-                style={{ marginRight: '10px' }}
-              />
-              <br /><br />
-              <Select
-                mode="multiple"
-                placeholder="选择标签"
-                value={newTask.tagIds}
-                onChange={(value) => setNewTask({...newTask, tagIds: value})}
-                style={{ width: '300px', marginRight: '10px' }}
-              >
-                {tags.map(tag => (
-                  <Option key={tag.id} value={tag.id}>
-                    <Tag color={tag.color}>{tag.name}</Tag>
-                  </Option>
-                ))}
-              </Select>
-              <Button type="primary" icon={<PlusOutlined />} onClick={addTask}>
-                添加 (Enter)
-              </Button>
-            </div>
-            
-            <TextArea 
-              placeholder="任务描述"
-              value={newTask.description}
-              onChange={(e) => setNewTask({...newTask, description: e.target.value})}
-              rows={2}
-              style={{ width: '500px', marginBottom: '20px' }}
-              suffix={<VoiceInput onTranscript={handleVoiceInputDescription} />}
-            />
-            
-            {/* 子任务区域 */}
-            <div style={{ marginBottom: '20px' }}>
-              <h4>子任务</h4>
-              <div style={{ display: 'flex', marginBottom: '10px' }}>
-                <Input 
-                  placeholder="添加子任务" 
-                  value={newSubTask}
-                  onChange={(e) => setNewSubTask(e.target.value)}
-                  style={{ flex: 1, marginRight: '10px' }}
-                  onPressEnter={addSubTask}
+        <Tabs defaultActiveKey="1" items={[
+          {
+            key: '1',
+            label: '桌面版',
+            children: (
+              <>
+                {/* 增强搜索区域 */}
+                <EnhancedSearch 
+                  tasks={tasks}
+                  tags={tags}
+                  onSearch={handleSearch}
+                  onFilter={handleFilter}
                 />
-                <Button onClick={addSubTask}>添加</Button>
-              </div>
-              {newTask.subTasks && newTask.subTasks.map(subTask => (
-                <div key={subTask.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                
+                {/* 批量操作区域 */}
+                <div style={{ marginBottom: '20px' }}>
                   <Checkbox 
-                    checked={subTask.completed} 
-                    onChange={() => {
-                      const updatedSubTasks = newTask.subTasks.map(st => 
-                        st.id === subTask.id ? { ...st, completed: !st.completed } : st
-                      );
-                      setNewTask({ ...newTask, subTasks: updatedSubTasks });
-                    }} 
+                    onChange={(e) => toggleSelectAll(e.target.checked)}
+                    checked={selectedTasks.length === filteredTasks.length && filteredTasks.length > 0}
                     style={{ marginRight: '10px' }}
-                  />
-                  <span style={{ textDecoration: subTask.completed ? 'line-through' : 'none', flex: 1 }}>
-                    {subTask.title}
-                  </span>
-                  <Button 
-                    icon={<EditOutlined />} 
-                    size="small" 
-                    onClick={() => {
-                      const newTitle = prompt('编辑子任务:', subTask.title);
-                      if (newTitle !== null) {
-                        const updatedSubTasks = newTask.subTasks.map(st => 
-                          st.id === subTask.id ? { ...st, title: newTitle } : st
-                        );
-                        setNewTask({ ...newTask, subTasks: updatedSubTasks });
-                      }
-                    }} 
-                    style={{ marginRight: '5px' }}
-                  />
-                  <Button 
-                    icon={<DeleteOutlined />} 
-                    size="small" 
-                    danger 
-                    onClick={() => {
-                      const updatedSubTasks = newTask.subTasks.filter(st => st.id !== subTask.id);
-                      setNewTask({ ...newTask, subTasks: updatedSubTasks });
-                    }}
+                  >
+                    全选
+                  </Checkbox>
+                  <BatchOperations 
+                    selectedTasks={selectedTasks} 
+                    deleteTasks={deleteTasks}
+                    updateTasks={updateTasks}
+                    tags={tags} 
                   />
                 </div>
-              ))}
-            </div>
-            
-            {/* 任务列表 */}
-            <TransitionGroup>
-              {filteredTasks.map((task, index) => {
-                // 确保每个任务都有对应的ref
-                if (!taskRefs.current[task.id]) {
-                  taskRefs.current[task.id] = React.createRef();
-                }
                 
-                return (
-                  <CSSTransition
-                    key={task.id}
-                    timeout={300}
-                    classNames="list-item"
-                    nodeRef={taskRefs.current[task.id]}
+                {/* 添加任务区域 */}
+                <Collapse style={{ marginBottom: '20px' }} items={[
+                  {
+                    key: '1',
+                    label: '任务模板',
+                    children: <TaskTemplates onApplyTemplate={handleApplyTemplate} />
+                  },
+                  {
+                    key: '2',
+                    label: '智能提醒',
+                    children: <SmartReminders />
+                  },
+                  {
+                    key: '3',
+                    label: '快速短语',
+                    children: <QuickPhrases onApplyPhrase={handleApplyPhrase} />
+                  },
+                  {
+                    key: '4',
+                    label: '任务分享',
+                    children: <TaskSharing />
+                  },
+                  {
+                    key: '5',
+                    label: '任务依赖',
+                    children: <TaskDependencies />
+                  },
+                  {
+                    key: '6',
+                    label: '项目管理',
+                    children: <ProjectManager />
+                  }
+                ]} />
+                
+                <div style={{ marginBottom: '20px' }}>
+                  <Input 
+                    ref={titleInputRef}
+                    placeholder="任务标题" 
+                    value={newTask.title}
+                    onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                    style={{ width: '200px', marginRight: '10px' }}
+                    suffix={<VoiceInput onTranscript={handleVoiceInput} />}
+                  />
+                  <DatePicker 
+                    placeholder="截止日期"
+                    onChange={(date) => setNewTask({...newTask, dueDate: date})}
+                    style={{ marginRight: '10px' }}
+                  />
+                  <Select
+                    value={newTask.priority}
+                    onChange={(value) => setNewTask({...newTask, priority: value})}
+                    style={{ width: '100px', marginRight: '10px' }}
                   >
-                    <div ref={taskRefs.current[task.id]}>
-                      {editingTask && editingTask.id === task.id ? (
-                        <List.Item
-                          actions={[
-                            <Button icon={<EditOutlined />} onClick={saveEdit}>保存 (Ctrl+S)</Button>,
-                            <Button onClick={() => {
-                              setEditingTask(null);
-                              setCurrentSubTasks([]);
-                            }}>取消 (ESC)</Button>
-                          ]}
-                        >
-                          <div style={{ width: '100%' }}>
-                            <Input 
-                              value={editingTask.title}
-                              onChange={(e) => setEditingTask({...editingTask, title: e.target.value})}
-                              style={{ width: '200px', marginRight: '10px' }}
-                              onPressEnter={saveEdit}
-                            />
-                            <DatePicker 
-                              value={editingTask.dueDate}
-                              onChange={(date) => setEditingTask({...editingTask, dueDate: date})}
-                              style={{ marginRight: '10px' }}
-                            />
-                            <Select
-                              value={editingTask.priority}
-                              onChange={(value) => setEditingTask({...editingTask, priority: value})}
-                              style={{ width: '100px', marginRight: '10px' }}
+                    <Option value="high">高</Option>
+                    <Option value="medium">中</Option>
+                    <Option value="low">低</Option>
+                  </Select>
+                  <TimePicker
+                    placeholder="提醒时间"
+                    onChange={(time) => setNewTask({...newTask, remindTime: time})}
+                    style={{ marginRight: '10px' }}
+                  />
+                  <br /><br />
+                  <Select
+                    mode="multiple"
+                    placeholder="选择标签"
+                    value={newTask.tagIds}
+                    onChange={(value) => setNewTask({...newTask, tagIds: value})}
+                    style={{ width: '300px', marginRight: '10px' }}
+                  >
+                    {tags.map(tag => (
+                      <Option key={tag.id} value={tag.id}>
+                        <Tag color={tag.color}>{tag.name}</Tag>
+                      </Option>
+                    ))}
+                  </Select>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={addTask}>
+                    添加 (Enter)
+                  </Button>
+                </div>
+                
+                <TextArea 
+                  placeholder="任务描述"
+                  value={newTask.description}
+                  onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                  rows={2}
+                  style={{ width: '500px', marginBottom: '20px' }}
+                  suffix={<VoiceInput onTranscript={handleVoiceInputDescription} />}
+                />
+                
+                {/* 子任务区域 */}
+                <div style={{ marginBottom: '20px' }}>
+                  <h4>子任务</h4>
+                  <div style={{ display: 'flex', marginBottom: '10px' }}>
+                    <Input 
+                      placeholder="添加子任务" 
+                      value={newSubTask}
+                      onChange={(e) => setNewSubTask(e.target.value)}
+                      style={{ flex: 1, marginRight: '10px' }}
+                      onPressEnter={addSubTask}
+                    />
+                    <Button onClick={addSubTask}>添加</Button>
+                  </div>
+                  {newTask.subTasks && newTask.subTasks.map(subTask => (
+                    <div key={subTask.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                      <Checkbox 
+                        checked={subTask.completed} 
+                        onChange={() => {
+                          const updatedSubTasks = newTask.subTasks.map(st => 
+                            st.id === subTask.id ? { ...st, completed: !st.completed } : st
+                          );
+                          setNewTask({ ...newTask, subTasks: updatedSubTasks });
+                        }} 
+                        style={{ marginRight: '10px' }}
+                      />
+                      <span style={{ textDecoration: subTask.completed ? 'line-through' : 'none', flex: 1 }}>
+                        {subTask.title}
+                      </span>
+                      <Button 
+                        icon={<EditOutlined />} 
+                        size="small" 
+                        onClick={() => {
+                          const newTitle = prompt('编辑子任务:', subTask.title);
+                          if (newTitle !== null) {
+                            const updatedSubTasks = newTask.subTasks.map(st => 
+                              st.id === subTask.id ? { ...st, title: newTitle } : st
+                            );
+                            setNewTask({ ...newTask, subTasks: updatedSubTasks });
+                          }
+                        }} 
+                        style={{ marginRight: '5px' }}
+                      />
+                      <Button 
+                        icon={<DeleteOutlined />} 
+                        size="small" 
+                        danger 
+                        onClick={() => {
+                          const updatedSubTasks = newTask.subTasks.filter(st => st.id !== subTask.id);
+                          setNewTask({ ...newTask, subTasks: updatedSubTasks });
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                
+                {/* 任务列表 */}
+                <TransitionGroup>
+                  {filteredTasks.map((task, index) => {
+                    // 确保每个任务都有对应的ref
+                    if (!taskRefs.current[task.id]) {
+                      taskRefs.current[task.id] = React.createRef();
+                    }
+                    
+                    return (
+                      <CSSTransition
+                        key={task.id}
+                        timeout={300}
+                        classNames="list-item"
+                        nodeRef={taskRefs.current[task.id]}
+                      >
+                        <div ref={taskRefs.current[task.id]}>
+                          {editingTask && editingTask.id === task.id ? (
+                            <List.Item
+                              actions={[
+                                <Button icon={<EditOutlined />} onClick={saveEdit}>保存 (Ctrl+S)</Button>,
+                                <Button onClick={() => {
+                                  setEditingTask(null);
+                                  setCurrentSubTasks([]);
+                                }}>取消 (ESC)</Button>
+                              ]}
                             >
-                              <Option value="high">高</Option>
-                              <Option value="medium">中</Option>
-                              <Option value="low">低</Option>
-                            </Select>
-                            <TimePicker
-                              value={editingTask.remindTime}
-                              onChange={(time) => setEditingTask({...editingTask, remindTime: time})}
-                              style={{ marginRight: '10px' }}
-                            />
-                            <br /><br />
-                            <Select
-                              mode="multiple"
-                              placeholder="选择标签"
-                              value={editingTask.tagIds}
-                              onChange={(value) => setEditingTask({...editingTask, tagIds: value})}
-                              style={{ width: '300px', marginRight: '10px' }}
-                            >
-                              {tags.map(tag => (
-                                <Option key={tag.id} value={tag.id}>
-                                  <Tag color={tag.color}>{tag.name}</Tag>
-                                </Option>
-                              ))}
-                            </Select>
-                            <br /><br />
-                            
-                            {/* 编辑子任务 */}
-                            <div style={{ marginBottom: '20px' }}>
-                              <h4>子任务</h4>
-                              <div style={{ display: 'flex', marginBottom: '10px' }}>
+                              <div style={{ width: '100%' }}>
                                 <Input 
-                                  placeholder="添加子任务" 
-                                  value={newSubTask}
-                                  onChange={(e) => setNewSubTask(e.target.value)}
-                                  style={{ flex: 1, marginRight: '10px' }}
-                                  onPressEnter={addSubTask}
+                                  value={editingTask.title}
+                                  onChange={(e) => setEditingTask({...editingTask, title: e.target.value})}
+                                  style={{ width: '200px', marginRight: '10px' }}
+                                  onPressEnter={saveEdit}
                                 />
-                                <Button onClick={addSubTask}>添加</Button>
-                              </div>
-                              {currentSubTasks.map(subTask => (
-                                <div key={subTask.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
-                                  <Checkbox 
-                                    checked={subTask.completed} 
-                                    onChange={() => toggleSubTaskComplete(subTask.id)} 
-                                    style={{ marginRight: '10px' }}
-                                  />
-                                  <span style={{ textDecoration: subTask.completed ? 'line-through' : 'none', flex: 1 }}>
-                                    {subTask.title}
-                                  </span>
-                                  <Button 
-                                    icon={<EditOutlined />} 
-                                    size="small" 
-                                    onClick={() => editSubTask(subTask)} 
-                                    style={{ marginRight: '5px' }}
-                                  />
-                                  <Button 
-                                    icon={<DeleteOutlined />} 
-                                    size="small" 
-                                    danger 
-                                    onClick={() => deleteSubTask(subTask.id)}
+                                <DatePicker 
+                                  value={editingTask.dueDate}
+                                  onChange={(date) => setEditingTask({...editingTask, dueDate: date})}
+                                  style={{ marginRight: '10px' }}
+                                />
+                                <Select
+                                  value={editingTask.priority}
+                                  onChange={(value) => setEditingTask({...editingTask, priority: value})}
+                                  style={{ width: '100px', marginRight: '10px' }}
+                                >
+                                  <Option value="high">高</Option>
+                                  <Option value="medium">中</Option>
+                                  <Option value="low">低</Option>
+                                </Select>
+                                <TimePicker
+                                  value={editingTask.remindTime}
+                                  onChange={(time) => setEditingTask({...editingTask, remindTime: time})}
+                                  style={{ marginRight: '10px' }}
+                                />
+                                <br /><br />
+                                <Select
+                                  mode="multiple"
+                                  placeholder="选择标签"
+                                  value={editingTask.tagIds}
+                                  onChange={(value) => setEditingTask({...editingTask, tagIds: value})}
+                                  style={{ width: '300px', marginRight: '10px' }}
+                                >
+                                  {tags.map(tag => (
+                                    <Option key={tag.id} value={tag.id}>
+                                      <Tag color={tag.color}>{tag.name}</Tag>
+                                    </Option>
+                                  ))}
+                                </Select>
+                                <br /><br />
+                                
+                                {/* 编辑子任务 */}
+                                <div style={{ marginBottom: '20px' }}>
+                                  <h4>子任务</h4>
+                                  <div style={{ display: 'flex', marginBottom: '10px' }}>
+                                    <Input 
+                                      placeholder="添加子任务" 
+                                      value={newSubTask}
+                                      onChange={(e) => setNewSubTask(e.target.value)}
+                                      style={{ flex: 1, marginRight: '10px' }}
+                                      onPressEnter={addSubTask}
+                                    />
+                                    <Button onClick={addSubTask}>添加</Button>
+                                  </div>
+                                  {currentSubTasks.map(subTask => (
+                                    <div key={subTask.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                                      <Checkbox 
+                                        checked={subTask.completed} 
+                                        onChange={() => toggleSubTaskComplete(subTask.id)} 
+                                        style={{ marginRight: '10px' }}
+                                      />
+                                      <span style={{ textDecoration: subTask.completed ? 'line-through' : 'none', flex: 1 }}>
+                                        {subTask.title}
+                                      </span>
+                                      <Button 
+                                        icon={<EditOutlined />} 
+                                        size="small" 
+                                        onClick={() => editSubTask(subTask)} 
+                                        style={{ marginRight: '5px' }}
+                                      />
+                                      <Button 
+                                        icon={<DeleteOutlined />} 
+                                        size="small" 
+                                        danger 
+                                        onClick={() => deleteSubTask(subTask.id)}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                                
+                                {/* 评论区域 */}
+                                <div style={{ marginBottom: '20px' }}>
+                                  <h4>任务评论</h4>
+                                  <TaskComments 
+                                    taskId={editingTask.id}
+                                    comments={editingTask.comments || []}
+                                    onAddComment={(comment) => {
+                                      const updatedComments = editingTask.comments 
+                                        ? [...editingTask.comments, comment] 
+                                        : [comment];
+                                      setEditingTask({ ...editingTask, comments: updatedComments });
+                                    }}
                                   />
                                 </div>
-                              ))}
-                            </div>
-                            
-                            {/* 评论区域 */}
-                            <div style={{ marginBottom: '20px' }}>
-                              <h4>任务评论</h4>
-                              <TaskComments 
-                                taskId={editingTask.id}
-                                comments={editingTask.comments || []}
-                                onAddComment={(comment) => {
-                                  const updatedComments = editingTask.comments 
-                                    ? [...editingTask.comments, comment] 
-                                    : [comment];
-                                  setEditingTask({ ...editingTask, comments: updatedComments });
-                                }}
-                              />
-                            </div>
-                            
-                            <Button type="primary" onClick={saveEdit}>保存 (Ctrl+S)</Button>
-                            <Button onClick={() => {
-                              setEditingTask(null);
-                              setCurrentSubTasks([]);
-                            }} style={{ marginLeft: '10px' }}>取消 (ESC)</Button>
-                            <TextArea 
-                              value={editingTask.description}
-                              onChange={(e) => setEditingTask({...editingTask, description: e.target.value})}
-                              rows={2}
-                              style={{ width: '500px', marginTop: '10px' }}
-                              onPressEnter={saveEdit}
-                            />
-                          </div>
-                        </List.Item>
-                      ) : (
-                        <CSSTransition
-                          key={task.id}
-                          timeout={300}
-                          classNames="task-add"
-                          nodeRef={taskRefs.current[task.id]}
-                        >
-                          <div ref={taskRefs.current[task.id]}>
+                                
+                                <Button type="primary" onClick={saveEdit}>保存 (Ctrl+S)</Button>
+                                <Button onClick={() => {
+                                  setEditingTask(null);
+                                  setCurrentSubTasks([]);
+                                }} style={{ marginLeft: '10px' }}>取消 (ESC)</Button>
+                                <TextArea 
+                                  value={editingTask.description}
+                                  onChange={(e) => setEditingTask({...editingTask, description: e.target.value})}
+                                  rows={2}
+                                  style={{ width: '500px', marginTop: '10px' }}
+                                  onPressEnter={saveEdit}
+                                />
+                              </div>
+                            </List.Item>
+                          ) : (
                             <TaskItem 
                               task={task}
                               index={index}
@@ -956,24 +964,26 @@ const TaskManager = () => {
                               deleteTask={deleteTask}
                               toggleComplete={toggleComplete}
                               allTags={tags}
-                              onDoubleClick={handleTaskDoubleClick}
+                              onDoubleClick={() => startEdit(task)}
                               selected={selectedTasks.includes(task.id)}
                               onSelect={handleTaskSelect}
                             />
-                          </div>
-                        </CSSTransition>
-                      )}
-                    </div>
-                  </CSSTransition>
-                );
-              })}
-            </TransitionGroup>
-          </TabPane>
+                          )}
+                        </div>
+                      </CSSTransition>
+                    );
+                  })}
+                </TransitionGroup>
+              </>
+            )
+          },
           
-          <TabPane tab="移动版" key="2">
-            <MobileOptimization />
-          </TabPane>
-        </Tabs>
+          {
+            key: '2',
+            label: '移动版',
+            children: <MobileOptimization />
+          }
+        ]} />
       </Card>
     </DndProvider>
   );
