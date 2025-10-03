@@ -15,7 +15,6 @@ import EnhancedCloudSync from './components/EnhancedCloudSync';
 import DataEncryption from './components/DataEncryption';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
 import useTodoStore from './store/todoStore';
-import { loadCurrentUser } from './utils/userDB';
 import './App.css';
 
 const { Header, Content, Footer } = Layout;
@@ -57,8 +56,10 @@ function App() {
       if (e.ctrlKey && e.key === 't') {
         e.preventDefault();
         setTheme(prevTheme => {
-          const newTheme = prevTheme === 'light' ? 'dark' : 'light';
-          document.body.className = newTheme === 'dark' ? 'dark-theme' : '';
+          const themes = ['light', 'dark', 'blue', 'green'];
+          const currentIndex = themes.indexOf(prevTheme);
+          const newTheme = themes[(currentIndex + 1) % themes.length];
+          applyTheme(newTheme);
           return newTheme;
         });
       }
@@ -93,10 +94,24 @@ function App() {
     localStorage.setItem('todoListPro_guide_shown', 'true');
   };
 
+  const applyTheme = (newTheme) => {
+    // 移除所有主题类
+    document.body.classList.remove('light-theme', 'dark-theme', 'blue-theme', 'green-theme');
+    
+    // 添加新主题类
+    if (newTheme !== 'light') {
+      document.body.classList.add(`${newTheme}-theme`);
+    }
+    
+    // 特殊处理暗色主题
+    if (newTheme === 'dark') {
+      document.body.classList.add('dark-theme');
+    }
+  };
+
   const handleThemeChange = (newTheme) => {
     setTheme(newTheme);
-    // 应用主题到body
-    document.body.className = newTheme === 'dark' ? 'dark-theme' : '';
+    applyTheme(newTheme);
   };
 
   const handleLayoutChange = (newLayout) => {
@@ -148,6 +163,14 @@ function App() {
     onClick: ({ key }) => setActiveTab(key)
   };
 
+  // 获取顶栏文字颜色样式
+  const getHeaderTextStyle = () => {
+    if (theme === 'blue' || theme === 'green') {
+      return { color: '#ffffff' };
+    }
+    return {};
+  };
+
   // 主菜单项
   const mainMenuItems = [
     { key: '1', label: '任务管理' },
@@ -157,7 +180,7 @@ function App() {
       key: 'views',
       label: (
         <Dropdown menu={viewMenu}>
-          <Button type="link" style={{ color: 'white' }}>
+          <Button type="link" style={{ ...getHeaderTextStyle() }}>
             视图切换 <DownOutlined />
           </Button>
         </Dropdown>
@@ -188,15 +211,22 @@ function App() {
           <Button 
             type="link" 
             onClick={() => setShowShortcuts(true)} 
-            style={{ color: 'white', marginRight: '20px' }}
-            icon={<QuestionCircleOutlined />}
+            style={{ ...getHeaderTextStyle(), marginRight: '20px' }}
           >
-            快捷键
+            <QuestionCircleOutlined /> 快捷键
           </Button>
-          <Button type="link" onClick={() => setShowGuide(true)} style={{ color: 'white', marginRight: '20px' }}>
+          <Button 
+            type="link" 
+            onClick={() => setShowGuide(true)} 
+            style={{ ...getHeaderTextStyle(), marginRight: '20px' }}
+          >
             使用指南
           </Button>
-          <Button type="link" onClick={handleLogout} style={{ color: 'white' }}>
+          <Button 
+            type="link" 
+            onClick={handleLogout} 
+            style={getHeaderTextStyle()}
+          >
             退出登录 ({user.username})
           </Button>
         </>
@@ -208,9 +238,9 @@ function App() {
   return (
     <Layout className={`layout ${theme} ${layout}`}>
       <Header>
-        <div className="logo">To-Do List Pro</div>
+        <div className="logo" style={getHeaderTextStyle()}>To-Do List Pro</div>
         <Menu 
-          theme="dark" 
+          theme={theme === 'dark' ? 'dark' : 'light'} 
           mode="horizontal" 
           defaultSelectedKeys={['1']} 
           selectedKeys={[activeTab]}

@@ -84,6 +84,12 @@ let mockSettings = {
 
 // API服务类
 class ApiService {
+  constructor(serverUrl = '') {
+    this.serverUrl = serverUrl;
+    // 在实际应用中，这里会使用serverUrl来构建API请求
+    // 但在当前的模拟实现中，我们仍然使用本地数据
+  }
+
   // 任务相关API
   static async getTasks() {
     return new Promise((resolve) => {

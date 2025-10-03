@@ -1,28 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Statistic, Row, Col, Table, Tag, DatePicker, Button, Progress, Tabs } from 'antd';
+import { Card, Statistic, Row, Col, Table, Tag, DatePicker, Button, Progress, Tabs, Typography, Divider } from 'antd';
 import { loadTasksFromLocalStorage } from '../utils/storage';
 import moment from 'moment';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell
+  PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
 } from 'recharts';
 import WorkEfficiency from './WorkEfficiency';
+import useTodoStore from '../store/todoStore';
 
 const { RangePicker } = DatePicker;
 const { TabPane } = Tabs;
+const { Title, Text } = Typography;
 
 const AnalyticsReport = () => {
-  const [tasks, setTasks] = useState([]);
+  const tasks = useTodoStore(state => state.tasks);
+  const tags = useTodoStore(state => state.tags);
   const [dateRange, setDateRange] = useState([
     moment().startOf('month'),
     moment().endOf('month')
   ]);
-
-  // 组件挂载时从LocalStorage加载任务
-  useEffect(() => {
-    const loadedTasks = loadTasksFromLocalStorage();
-    setTasks(loadedTasks);
-  }, []);
 
   // 计算统计数据
   const calculateStatistics = () => {
@@ -78,6 +75,34 @@ const AnalyticsReport = () => {
       }
     });
     
+    // 按日期统计完成情况
+    const completionByDate = {};
+    filteredTasks.forEach(task => {
+      if (task.completedDate) {
+        const date = task.completedDate;
+        if (!completionByDate[date]) {
+          completionByDate[date] = 0;
+        }
+        completionByDate[date]++;
+      }
+    });
+    
+    // 计算平均每日完成任务数
+    const daysInRange = endDate.diff(startDate, 'days') + 1;
+    const avgDailyCompletion = completed > 0 ? (completed / daysInRange).toFixed(1) : 0;
+    
+    // 计算任务密集度（按截止日期分布）
+    const taskDensityByDate = {};
+    filteredTasks.forEach(task => {
+      if (task.dueDate) {
+        const date = task.dueDate;
+        if (!taskDensityByDate[date]) {
+          taskDensityByDate[date] = 0;
+        }
+        taskDensityByDate[date]++;
+      }
+    });
+    
     return {
       todayPending,
       completed,
@@ -85,7 +110,10 @@ const AnalyticsReport = () => {
       total,
       completionRate,
       priorityStats,
-      tagStats
+      tagStats,
+      completionByDate,
+      avgDailyCompletion,
+      taskDensityByDate
     };
   };
 
@@ -126,12 +154,63 @@ const AnalyticsReport = () => {
 
   const trendData = generateTrendData();
 
+  // 生成完成趋势数据
+  const generateCompletionTrendData = () => {
+    const completionTrendData = [];
+    const [startDate, endDate] = dateRange;
+    const days = endDate.diff(startDate, 'days') + 1;
+    
+    for (let i = 0; i < days; i++) {
+      const currentDate = startDate.clone().add(i, 'days');
+      const dateStr = currentDate.format('YYYY-MM-DD');
+      
+      const completedCount = stats.completionByDate[dateStr] || 0;
+      
+      completionTrendData.push({
+        date: currentDate.format('MM-DD'),
+        completed: completedCount
+      });
+    }
+    
+    return completionTrendData;
+  };
+
+  const completionTrendData = generateCompletionTrendData();
+
+  // 生成任务密度数据
+  const generateTaskDensityData = () => {
+    const densityData = [];
+    const [startDate, endDate] = dateRange;
+    const days = endDate.diff(startDate, 'days') + 1;
+    
+    for (let i = 0; i < days; i++) {
+      const currentDate = startDate.clone().add(i, 'days');
+      const dateStr = currentDate.format('YYYY-MM-DD');
+      
+      const taskCount = stats.taskDensityByDate[dateStr] || 0;
+      
+      densityData.push({
+        date: currentDate.format('MM-DD'),
+        tasks: taskCount
+      });
+    }
+    
+    return densityData;
+  };
+
+  const taskDensityData = generateTaskDensityData();
+
   // 颜色配置
   const COLORS = ['#ff4d4f', '#faad14', '#52c41a'];
   const priorityColors = {
     '高优先级': '#ff4d4f',
     '中优先级': '#faad14',
     '低优先级': '#52c41a'
+  };
+
+  // 获取标签信息
+  const getTagInfo = (tagId) => {
+    return tags.find(tag => tag.id === tagId) || { name: '未知标签', color: '#d9d9d9' };
   };
 
   return (
@@ -161,6 +240,14 @@ const AnalyticsReport = () => {
               }} style={{ marginLeft: '10px' }}>
                 本周
               </Button>
+              <Button onClick={() => {
+                setDateRange([
+                  moment().startOf('year'),
+                  moment().endOf('year')
+                ]);
+              }} style={{ marginLeft: '10px' }}>
+                本年
+              </Button>
             </div>
             
             <Row gutter={16} style={{ marginBottom: '20px' }}>
@@ -187,7 +274,7 @@ const AnalyticsReport = () => {
             </Row>
             
             <Row gutter={16} style={{ marginBottom: '20px' }}>
-              <Col span={12}>
+              <Col span={8}>
                 <Card title="完成率">
                   <Progress 
                     type="circle" 
@@ -203,7 +290,7 @@ const AnalyticsReport = () => {
                   </div>
                 </Card>
               </Col>
-              <Col span={12}>
+              <Col span={8}>
                 <Card title="优先级分布">
                   <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
@@ -226,10 +313,32 @@ const AnalyticsReport = () => {
                   </ResponsiveContainer>
                 </Card>
               </Col>
+              <Col span={8}>
+                <Card title="效率指标">
+                  <Statistic 
+                    title="平均每日完成任务" 
+                    value={stats.avgDailyCompletion} 
+                    suffix="个/天" 
+                  />
+                  <div style={{ marginTop: '20px' }}>
+                    <Text>任务密度分析:</Text>
+                    <br />
+                    <Text type="secondary">
+                      最密集日期: {Object.keys(stats.taskDensityByDate).length > 0 
+                        ? Object.keys(stats.taskDensityByDate).reduce((a, b) => 
+                            stats.taskDensityByDate[a] > stats.taskDensityByDate[b] ? a : b
+                          ) 
+                        : '暂无数据'}
+                    </Text>
+                  </div>
+                </Card>
+              </Col>
             </Row>
             
+            <Divider>趋势分析</Divider>
+            
             <Row gutter={16} style={{ marginBottom: '20px' }}>
-              <Col span={24}>
+              <Col span={12}>
                 <Card title="任务趋势">
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart
@@ -249,6 +358,58 @@ const AnalyticsReport = () => {
                       <Bar dataKey="tasks" name="总任务数" fill="#1890ff" />
                       <Bar dataKey="completed" name="已完成" fill="#52c41a" />
                     </BarChart>
+                  </ResponsiveContainer>
+                </Card>
+              </Col>
+              <Col span={12}>
+                <Card title="完成趋势">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart
+                      data={completionTrendData}
+                      margin={{
+                        top: 5,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="completed" 
+                        name="每日完成数" 
+                        stroke="#52c41a" 
+                        activeDot={{ r: 8 }} 
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Card>
+              </Col>
+            </Row>
+            
+            <Row gutter={16} style={{ marginBottom: '20px' }}>
+              <Col span={24}>
+                <Card title="任务密度分布">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart
+                      data={taskDensityData}
+                      margin={{
+                        top: 10,
+                        right: 30,
+                        left: 0,
+                        bottom: 0,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Area type="monotone" dataKey="tasks" name="任务数量" stroke="#8884d8" fill="#8884d8" />
+                    </AreaChart>
                   </ResponsiveContainer>
                 </Card>
               </Col>
@@ -272,27 +433,37 @@ const AnalyticsReport = () => {
                         dataIndex: 'tagId',
                         key: 'tagId',
                         render: (tagId) => {
-                          // 这里应该从标签数据中获取标签信息
-                          return <Tag color="#1890ff">标签 {tagId}</Tag>;
+                          const tagInfo = getTagInfo(tagId);
+                          return <Tag color={tagInfo.color}>{tagInfo.name}</Tag>;
                         }
                       },
                       {
                         title: '任务数',
                         dataIndex: 'count',
-                        key: 'count'
+                        key: 'count',
+                        sorter: (a, b) => a.count - b.count
                       },
                       {
                         title: '已完成',
                         dataIndex: 'completed',
-                        key: 'completed'
+                        key: 'completed',
+                        sorter: (a, b) => a.completed - b.completed
                       },
                       {
                         title: '完成率',
                         dataIndex: 'completionRate',
                         key: 'completionRate',
-                        render: (rate) => `${rate}%`
+                        sorter: (a, b) => a.completionRate - b.completionRate,
+                        render: (rate) => (
+                          <Progress 
+                            percent={rate} 
+                            size="small" 
+                            strokeColor={rate >= 80 ? '#52c41a' : rate >= 50 ? '#faad14' : '#ff4d4f'}
+                          />
+                        )
                       }
                     ]}
+                    pagination={{ pageSize: 5 }}
                   />
                 </Card>
               </Col>
@@ -301,6 +472,46 @@ const AnalyticsReport = () => {
           
           <TabPane tab="工作效率" key="2">
             <WorkEfficiency />
+          </TabPane>
+          
+          <TabPane tab="深度分析" key="3">
+            <Card title="深度分析报告">
+              <Title level={4}>任务完成模式分析</Title>
+              <Text>
+                <p>根据您的任务完成数据，我们发现以下模式：</p>
+                <ul>
+                  <li>您在{stats.completionRate >= 70 ? '大部分' : '部分'}任务上表现出色</li>
+                  <li>高优先级任务完成率: {Math.round((stats.priorityStats.high / (stats.priorityStats.high + stats.priorityStats.medium + stats.priorityStats.low)) * 100 || 0)}%</li>
+                  <li>平均每日完成 {stats.avgDailyCompletion} 个任务</li>
+                  <li>{stats.overdue > 0 ? `有 ${stats.overdue} 个任务逾期` : '没有逾期任务，做得很好！'}</li>
+                </ul>
+              </Text>
+              
+              <Divider />
+              
+              <Title level={4}>改进建议</Title>
+              <Text>
+                <ul>
+                  <li>{stats.completionRate >= 80 ? '继续保持当前的高效工作状态' : 
+                      stats.completionRate >= 50 ? '可以尝试将更多任务分解为小步骤来提高完成率' : 
+                      '建议制定更详细的任务计划和时间安排'}</li>
+                  <li>{stats.overdue > 0 ? `需要更加关注截止日期，避免任务逾期` : '在任务时间管理方面表现良好'}</li>
+                  <li>{stats.priorityStats.high > stats.priorityStats.low ? '高优先级任务处理得当' : '可以优先处理高优先级任务'}</li>
+                </ul>
+              </Text>
+              
+              <Divider />
+              
+              <Title level={4}>时间管理建议</Title>
+              <Text>
+                <p>根据您的任务分布情况，我们建议：</p>
+                <ul>
+                  <li>在任务密集的日期提前规划，避免临时抱佛脚</li>
+                  <li>合理分配任务优先级，确保重要任务得到足够关注</li>
+                  <li>保持每日任务完成的稳定性，避免集中完成或长时间不完成任务</li>
+                </ul>
+              </Text>
+            </Card>
           </TabPane>
         </Tabs>
       </Card>

@@ -18,6 +18,7 @@ import VoiceInput from './VoiceInput';
 import TaskDependencies from './TaskDependencies';
 import ProjectManager from './ProjectManager';
 import TaskComments from './TaskComments';
+import AIAssistant from './AIAssistant';
 import '../styles/TaskAnimations.css';
 
 const { Title } = Typography;
@@ -435,8 +436,21 @@ const TaskManager = () => {
     }
   };
 
+  // 验证截止日期是否在过去
+  const isValidDueDate = (date) => {
+    if (!date) return true; // 允许没有截止日期
+    const today = moment().startOf('day');
+    return date.isSameOrAfter(today);
+  };
+
   const addTask = () => {
     if (newTask.title.trim() !== '') {
+      // 验证截止日期
+      if (newTask.dueDate && !isValidDueDate(newTask.dueDate)) {
+        message.error('截止日期不能设置在过去');
+        return;
+      }
+      
       const task = {
         id: Date.now(),
         title: newTask.title,
@@ -558,6 +572,12 @@ const TaskManager = () => {
   };
 
   const saveEdit = () => {
+    // 验证截止日期
+    if (editingTask.dueDate && !isValidDueDate(editingTask.dueDate)) {
+      message.error('截止日期不能设置在过去');
+      return;
+    }
+    
     // 使用store更新任务
     updateTaskInStore(editingTask.id, {
       ...editingTask,
@@ -721,6 +741,10 @@ const TaskManager = () => {
                     placeholder="截止日期"
                     onChange={(date) => setNewTask({...newTask, dueDate: date})}
                     style={{ marginRight: '10px' }}
+                    disabledDate={(current) => {
+                      // 禁用过去的日期
+                      return current && current < moment().startOf('day');
+                    }}
                   />
                   <Select
                     value={newTask.priority}
@@ -763,6 +787,14 @@ const TaskManager = () => {
                   style={{ width: '500px', marginBottom: '20px' }}
                   suffix={<VoiceInput onTranscript={handleVoiceInputDescription} />}
                 />
+                
+                {/* AI助手 */}
+                {newTask.title && (
+                  <AIAssistant 
+                    task={newTask} 
+                    onTaskUpdate={(id, updates) => setNewTask({...newTask, ...updates})} 
+                  />
+                )}
                 
                 {/* 子任务区域 */}
                 <div style={{ marginBottom: '20px' }}>
@@ -856,6 +888,10 @@ const TaskManager = () => {
                                   value={editingTask.dueDate}
                                   onChange={(date) => setEditingTask({...editingTask, dueDate: date})}
                                   style={{ marginRight: '10px' }}
+                                  disabledDate={(current) => {
+                                    // 禁用过去的日期
+                                    return current && current < moment().startOf('day');
+                                  }}
                                 />
                                 <Select
                                   value={editingTask.priority}
@@ -940,6 +976,12 @@ const TaskManager = () => {
                                     }}
                                   />
                                 </div>
+                                
+                                {/* AI助手 */}
+                                <AIAssistant 
+                                  task={editingTask} 
+                                  onTaskUpdate={(id, updates) => setEditingTask({...editingTask, ...updates})} 
+                                />
                                 
                                 <Button type="primary" onClick={saveEdit}>保存 (Ctrl+S)</Button>
                                 <Button onClick={() => {

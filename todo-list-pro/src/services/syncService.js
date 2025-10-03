@@ -3,9 +3,6 @@ import { getAllData, addData, updateData, deleteData, getDataByUserId } from '..
 import useTodoStore from '../store/todoStore';
 import ApiService from './apiService';
 
-// 模拟API端点
-const API_BASE_URL = '/api';
-
 // 同步状态
 const syncStatus = {
   isSyncing: false,
@@ -19,13 +16,15 @@ const isOnline = () => {
 };
 
 // 同步任务到服务器
-export const syncTasksToServer = async (tasks) => {
+export const syncTasksToServer = async (tasks, serverUrl) => {
   if (!isOnline()) {
     throw new Error('无网络连接');
   }
 
   try {
-    const response = await ApiService.syncTasks(tasks);
+    // 创建新的API服务实例，使用指定的服务器URL
+    const apiService = new ApiService(serverUrl);
+    const response = await apiService.syncTasks(tasks);
     return response;
   } catch (error) {
     throw new Error(`网络错误: ${error.message}`);
@@ -33,13 +32,15 @@ export const syncTasksToServer = async (tasks) => {
 };
 
 // 从服务器获取任务
-export const fetchTasksFromServer = async () => {
+export const fetchTasksFromServer = async (serverUrl) => {
   if (!isOnline()) {
     throw new Error('无网络连接');
   }
 
   try {
-    const response = await ApiService.getTasks();
+    // 创建新的API服务实例，使用指定的服务器URL
+    const apiService = new ApiService(serverUrl);
+    const response = await apiService.getTasks();
     return response.data;
   } catch (error) {
     throw new Error(`网络错误: ${error.message}`);
@@ -47,13 +48,15 @@ export const fetchTasksFromServer = async () => {
 };
 
 // 同步标签到服务器
-export const syncTagsToServer = async (tags) => {
+export const syncTagsToServer = async (tags, serverUrl) => {
   if (!isOnline()) {
     throw new Error('无网络连接');
   }
 
   try {
-    const response = await ApiService.syncTags(tags);
+    // 创建新的API服务实例，使用指定的服务器URL
+    const apiService = new ApiService(serverUrl);
+    const response = await apiService.syncTags(tags);
     return response;
   } catch (error) {
     throw new Error(`网络错误: ${error.message}`);
@@ -61,13 +64,15 @@ export const syncTagsToServer = async (tags) => {
 };
 
 // 从服务器获取标签
-export const fetchTagsFromServer = async () => {
+export const fetchTagsFromServer = async (serverUrl) => {
   if (!isOnline()) {
     throw new Error('无网络连接');
   }
 
   try {
-    const response = await ApiService.getTags();
+    // 创建新的API服务实例，使用指定的服务器URL
+    const apiService = new ApiService(serverUrl);
+    const response = await apiService.getTags();
     return response.data;
   } catch (error) {
     throw new Error(`网络错误: ${error.message}`);
@@ -82,9 +87,13 @@ const resolveConflicts = (localData, remoteData) => {
 };
 
 // 完整同步流程
-export const performFullSync = async (localTasks, localTags) => {
+export const performFullSync = async (localTasks, localTags, serverUrl) => {
   if (syncStatus.isSyncing) {
     return { success: false, message: '同步已在进行中' };
+  }
+
+  if (!serverUrl) {
+    return { success: false, message: '未指定服务器地址' };
   }
 
   syncStatus.isSyncing = true;
@@ -94,11 +103,11 @@ export const performFullSync = async (localTasks, localTags) => {
     // 同步任务
     let remoteTasks = [];
     try {
-      remoteTasks = await fetchTasksFromServer();
+      remoteTasks = await fetchTasksFromServer(serverUrl);
       // 合并本地和远程任务
       const mergedTasks = resolveConflicts(localTasks, remoteTasks);
       // 同步回服务器
-      await syncTasksToServer(mergedTasks);
+      await syncTasksToServer(mergedTasks, serverUrl);
     } catch (error) {
       console.warn('任务同步失败:', error.message);
     }
@@ -106,11 +115,11 @@ export const performFullSync = async (localTasks, localTags) => {
     // 同步标签
     let remoteTags = [];
     try {
-      remoteTags = await fetchTagsFromServer();
+      remoteTags = await fetchTagsFromServer(serverUrl);
       // 合并本地和远程标签
       const mergedTags = resolveConflicts(localTags, remoteTags);
       // 同步回服务器
-      await syncTagsToServer(mergedTags);
+      await syncTagsToServer(mergedTags, serverUrl);
     } catch (error) {
       console.warn('标签同步失败:', error.message);
     }

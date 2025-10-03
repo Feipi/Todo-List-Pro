@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Form, Input, Button, message, Tabs } from 'antd';
-import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
+import { Card, Form, Input, Button, message, Tabs, Divider, Tooltip } from 'antd';
+import { UserOutlined, LockOutlined, MailOutlined, WechatOutlined, QqOutlined, GoogleOutlined, AppleOutlined } from '@ant-design/icons';
 import { registerUser, findUserByUsername, validateUserPassword, saveCurrentUser } from '../utils/userDB';
 
 const { TabPane } = Tabs;
@@ -81,6 +81,43 @@ const Login = ({ onLogin }) => {
     }
   };
 
+  // 快捷登录处理
+  const handleQuickLogin = (provider) => {
+    message.info(`正在使用 ${provider} 快捷登录...`);
+    // 模拟快捷登录流程
+    setTimeout(() => {
+      const userToSave = {
+        id: Date.now(),
+        username: `${provider}_user_${Math.floor(Math.random() * 1000)}`,
+        email: `${provider}_user@example.com`,
+        token: 'fake-jwt-token-' + Date.now()
+      };
+      
+      saveCurrentUser(userToSave);
+      message.success(`${provider} 快捷登录成功`);
+      onLogin(userToSave);
+    }, 1000);
+  };
+
+  // 游客模式登录
+  const handleGuestLogin = () => {
+    message.info('正在进入游客模式...');
+    // 模拟游客登录
+    setTimeout(() => {
+      const userToSave = {
+        id: Date.now(),
+        username: '游客用户',
+        email: 'guest@example.com',
+        token: 'fake-jwt-token-' + Date.now(),
+        isGuest: true
+      };
+      
+      saveCurrentUser(userToSave);
+      message.success('已进入游客模式');
+      onLogin(userToSave);
+    }, 1000);
+  };
+
   return (
     <div style={{ 
       display: 'flex', 
@@ -114,7 +151,48 @@ const Login = ({ onLogin }) => {
                 </Button>
               </Form.Item>
             </Form>
+            
+            <Divider>快捷登录</Divider>
+            
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
+              <Tooltip title="微信登录">
+                <Button 
+                  icon={<WechatOutlined />} 
+                  onClick={() => handleQuickLogin('微信')}
+                  style={{ borderColor: '#07c160', color: '#07c160' }}
+                />
+              </Tooltip>
+              <Tooltip title="QQ登录">
+                <Button 
+                  icon={<QqOutlined />} 
+                  onClick={() => handleQuickLogin('QQ')}
+                  style={{ borderColor: '#12b7f5', color: '#12b7f5' }}
+                />
+              </Tooltip>
+              <Tooltip title="Google登录">
+                <Button 
+                  icon={<GoogleOutlined />} 
+                  onClick={() => handleQuickLogin('Google')}
+                />
+              </Tooltip>
+              <Tooltip title="Apple登录">
+                <Button 
+                  icon={<AppleOutlined />} 
+                  onClick={() => handleQuickLogin('Apple')}
+                />
+              </Tooltip>
+            </div>
+            
+            <Button 
+              type="dashed" 
+              block 
+              onClick={handleGuestLogin}
+              style={{ marginBottom: '10px' }}
+            >
+              游客模式体验
+            </Button>
           </TabPane>
+          
           <TabPane tab="注册" key="register">
             <Form
               name="register"
@@ -172,6 +250,31 @@ const Login = ({ onLogin }) => {
                 </Button>
               </Form.Item>
             </Form>
+            
+            <Divider>快捷注册</Divider>
+            
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+              <Tooltip title="微信注册">
+                <Button 
+                  icon={<WechatOutlined />} 
+                  onClick={() => handleQuickLogin('微信')}
+                  style={{ borderColor: '#07c160', color: '#07c160' }}
+                />
+              </Tooltip>
+              <Tooltip title="QQ注册">
+                <Button 
+                  icon={<QqOutlined />} 
+                  onClick={() => handleQuickLogin('QQ')}
+                  style={{ borderColor: '#12b7f5', color: '#12b7f5' }}
+                />
+              </Tooltip>
+              <Tooltip title="Google注册">
+                <Button 
+                  icon={<GoogleOutlined />} 
+                  onClick={() => handleQuickLogin('Google')}
+                />
+              </Tooltip>
+            </div>
           </TabPane>
         </Tabs>
       </Card>
