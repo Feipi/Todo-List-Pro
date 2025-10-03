@@ -11,17 +11,20 @@ import CalendarView from './components/CalendarView';
 import KanbanView from './components/KanbanView';
 import TimelineView from './components/TimelineView';
 import Achievements from './components/Achievements';
-import CloudSync from './components/CloudSync';
+import EnhancedCloudSync from './components/EnhancedCloudSync';
 import DataEncryption from './components/DataEncryption';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
-import { loadUserFromLocalStorage, removeUserFromLocalStorage } from './utils/storage';
+import useTodoStore from './store/todoStore';
 import './App.css';
 
 const { Header, Content, Footer } = Layout;
 
 function App() {
   const [activeTab, setActiveTab] = useState('1');
-  const [user, setUser] = useState(null);
+  const user = useTodoStore(state => state.user);
+  const setUser = useTodoStore(state => state.setUser);
+  const logout = useTodoStore(state => state.logout);
+  
   const [showGuide, setShowGuide] = useState(false);
   const [theme, setTheme] = useState('light');
   const [layout, setLayout] = useState('default');
@@ -29,17 +32,19 @@ function App() {
 
   // 组件挂载时检查用户登录状态
   useEffect(() => {
-    const savedUser = loadUserFromLocalStorage();
-    if (savedUser) {
-      setUser(savedUser);
-    }
+    // 这里可以实现从持久化存储加载用户信息的逻辑
+    // 为简化，我们使用一个模拟的用户对象
+    // const savedUser = loadUserFromLocalStorage();
+    // if (savedUser) {
+    //   setUser(savedUser);
+    // }
     
     // 检查是否显示新手引导
     const guideShown = localStorage.getItem('todoListPro_guide_shown');
     if (!guideShown) {
       setShowGuide(true);
     }
-  }, []);
+  }, [setUser]);
 
   // 键盘快捷键处理
   useEffect(() => {
@@ -80,8 +85,7 @@ function App() {
   };
 
   const handleLogout = () => {
-    removeUserFromLocalStorage();
-    setUser(null);
+    logout();
     setActiveTab('1');
     message.success('已退出登录');
   };
@@ -125,7 +129,7 @@ function App() {
       case '8':
         return <Achievements />;
       case '9':
-        return <CloudSync />;
+        return <EnhancedCloudSync />;
       case '10':
         return <DataEncryption />;
       default:

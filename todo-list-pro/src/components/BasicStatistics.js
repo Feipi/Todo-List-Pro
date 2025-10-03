@@ -1,177 +1,90 @@
 import React, { useState, useEffect } from 'react';
-import { Statistic, Row, Col, Table, Tag, DatePicker, Card } from 'antd';
-import { loadTasksFromLocalStorage } from '../utils/storage';
-import moment from 'moment';
+import { Statistic, Row, Col, Card, Progress, Tag } from 'antd';
+import { CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
-const { RangePicker } = DatePicker;
-
-const BasicStatistics = () => {
-  const [tasks, setTasks] = useState([]);
-  const [dateRange, setDateRange] = useState([
-    moment().startOf('month'),
-    moment().endOf('month')
-  ]);
-
-  // 组件挂载时从LocalStorage加载任务
-  useEffect(() => {
-    const loadedTasks = loadTasksFromLocalStorage();
-    setTasks(loadedTasks);
-    
-    // 添加窗口焦点事件监听器，当用户回到页面时重新加载任务
-    const handleFocus = () => {
-      const loadedTasks = loadTasksFromLocalStorage();
-      setTasks(loadedTasks);
-    };
-    
-    window.addEventListener('focus', handleFocus);
-    
-    // 清理事件监听器
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
-
-  // 计算统计数据
-  const calculateStatistics = () => {
-    const today = moment().format('YYYY-MM-DD');
-    const [startDate, endDate] = dateRange;
-    
-    // 过滤指定日期范围内的任务
-    const filteredTasks = tasks.filter(task => {
-      if (!task.dueDate) return false;
-      const taskDate = moment(task.dueDate);
-      return taskDate.isSameOrAfter(startDate) && taskDate.isSameOrBefore(endDate);
-    });
-    
-    // 今日待办数
-    const todayPending = filteredTasks.filter(task => 
-      !task.completed && task.dueDate === today
-    ).length;
-    
-    // 已完成数
-    const completed = filteredTasks.filter(task => task.completed).length;
-    
-    // 逾期数
-    const overdue = filteredTasks.filter(task => 
-      !task.completed && task.dueDate && moment(task.dueDate).isBefore(today)
-    ).length;
-    
-    // 总任务数
-    const total = filteredTasks.length;
-    
-    // 按优先级统计
-    const priorityStats = {
-      high: filteredTasks.filter(task => task.priority === 'high').length,
-      medium: filteredTasks.filter(task => task.priority === 'medium').length,
-      low: filteredTasks.filter(task => task.priority === 'low').length
-    };
-    
-    return {
-      todayPending,
-      completed,
-      overdue,
-      total,
-      priorityStats
-    };
+const BasicStatistics = ({ statistics }) => {
+  // 如果没有传入统计数据，使用默认值
+  const stats = statistics || {
+    total: 0,
+    completed: 0,
+    pending: 0,
+    byPriority: { high: 0, medium: 0, low: 0 },
+    byTag: []
   };
-
-  const stats = calculateStatistics();
-
-  // 任务列表列定义
-  const columns = [
-    {
-      title: '任务标题',
-      dataIndex: 'title',
-      key: 'title'
-    },
-    {
-      title: '截止日期',
-      dataIndex: 'dueDate',
-      key: 'dueDate'
-    },
-    {
-      title: '优先级',
-      dataIndex: 'priority',
-      key: 'priority',
-      render: (priority) => {
-        const priorityMap = {
-          'high': { text: '高', color: 'red' },
-          'medium': { text: '中', color: 'orange' },
-          'low': { text: '低', color: 'green' }
-        };
-        const priorityInfo = priorityMap[priority] || { text: '未知', color: 'default' };
-        return <Tag color={priorityInfo.color}>{priorityInfo.text}</Tag>;
-      }
-    },
-    {
-      title: '状态',
-      dataIndex: 'completed',
-      key: 'completed',
-      render: (completed) => (
-        <Tag color={completed ? 'green' : 'red'}>
-          {completed ? '已完成' : '未完成'}
-        </Tag>
-      )
-    }
-  ];
-
-  // 过滤指定日期范围内的任务
-  const [startDate, endDate] = dateRange;
-  const filteredTasks = tasks.filter(task => {
-    if (!task.dueDate) return false;
-    const taskDate = moment(task.dueDate);
-    return taskDate.isSameOrAfter(startDate) && taskDate.isSameOrBefore(endDate);
-  });
+  
+  const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
   return (
     <div>
-      <Row gutter={16} style={{ marginBottom: '20px' }}>
+      <Row gutter={16}>
         <Col span={6}>
-          <Statistic title="今日待办" value={stats.todayPending} />
+          <Card>
+            <Statistic
+              title="总任务数"
+              value={stats.total}
+              prefix={<ExclamationCircleOutlined />}
+            />
+          </Card>
         </Col>
         <Col span={6}>
-          <Statistic title="已完成" value={stats.completed} />
+          <Card>
+            <Statistic
+              title="已完成"
+              value={stats.completed}
+              prefix={<CheckCircleOutlined />}
+              valueStyle={{ color: '#3f8600' }}
+            />
+          </Card>
         </Col>
         <Col span={6}>
-          <Statistic title="逾期任务" value={stats.overdue} />
+          <Card>
+            <Statistic
+              title="待完成"
+              value={stats.pending}
+              prefix={<ClockCircleOutlined />}
+              valueStyle={{ color: '#cf1322' }}
+            />
+          </Card>
         </Col>
         <Col span={6}>
-          <Statistic title="总任务数" value={stats.total} />
+          <Card>
+            <Statistic
+              title="完成率"
+              value={completionRate}
+              suffix="%"
+              valueStyle={{ color: '#1890ff' }}
+            />
+          </Card>
         </Col>
       </Row>
       
-      <Row gutter={16} style={{ marginBottom: '20px' }}>
+      <Row gutter={16} style={{ marginTop: '20px' }}>
         <Col span={8}>
-          <Card title="高优先级任务">
-            <Statistic value={stats.priorityStats.high} />
+          <Card title="按优先级统计">
+            <p>高优先级: {stats.byPriority.high}</p>
+            <Progress percent={stats.total > 0 ? Math.round((stats.byPriority.high / stats.total) * 100) : 0} status="exception" />
+            <p>中优先级: {stats.byPriority.medium}</p>
+            <Progress percent={stats.total > 0 ? Math.round((stats.byPriority.medium / stats.total) * 100) : 0} status="normal" />
+            <p>低优先级: {stats.byPriority.low}</p>
+            <Progress percent={stats.total > 0 ? Math.round((stats.byPriority.low / stats.total) * 100) : 0} status="success" />
           </Card>
         </Col>
-        <Col span={8}>
-          <Card title="中优先级任务">
-            <Statistic value={stats.priorityStats.medium} />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card title="低优先级任务">
-            <Statistic value={stats.priorityStats.low} />
+        <Col span={16}>
+          <Card title="按标签统计">
+            {stats.byTag.map(({ tag, count }) => (
+              <div key={tag.id} style={{ marginBottom: '10px' }}>
+                <Tag color={tag.color}>{tag.name}</Tag>
+                <span style={{ marginLeft: '10px' }}>{count} 个任务</span>
+                <Progress 
+                  percent={stats.total > 0 ? Math.round((count / stats.total) * 100) : 0} 
+                  size="small" 
+                  style={{ marginTop: '5px' }}
+                />
+              </div>
+            ))}
           </Card>
         </Col>
       </Row>
-      
-      <div style={{ marginBottom: '20px' }}>
-        <RangePicker 
-          value={dateRange}
-          onChange={setDateRange}
-          style={{ marginRight: '10px' }}
-        />
-      </div>
-      
-      <Table 
-        dataSource={filteredTasks} 
-        columns={columns} 
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-      />
     </div>
   );
 };

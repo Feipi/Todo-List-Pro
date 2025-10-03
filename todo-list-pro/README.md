@@ -17,10 +17,18 @@
 - ✅ 任务搜索与筛选（关键词搜索、标签筛选）
 - ✅ 统计分析（任务统计、优先级分布）
 
+### V3.0 状态管理优化（当前版本）
+- ✅ Zustand状态管理替代React原生状态
+- ✅ IndexedDB数据持久化替代LocalStorage
+- ✅ 增强的云同步功能
+- ✅ 性能优化（虚拟滚动、记忆化等）
+- ✅ 完整的架构重构
+
 ## 技术栈
 
-- React 18
+- React 19
 - Ant Design 5
+- Zustand（状态管理）
 - react-dnd（拖拽功能）
 - moment.js（日期处理）
 
@@ -40,6 +48,7 @@ npm start
 2. 在"任务管理"页面可以添加、编辑、删除任务
 3. 在"标签管理"页面可以管理任务标签
 4. 在"统计分析"页面可以查看任务统计数据
+5. 在"云同步"页面可以同步数据到服务器
 
 ## 项目结构
 
@@ -50,8 +59,20 @@ src/
 │   ├── TagManager.js    # 标签管理组件
 │   ├── Statistics.js    # 统计分析组件
 │   └── Login.js         # 登录组件
+├── store/               # Zustand状态存储
+│   └── todoStore.js     # 主要状态存储
+├── hooks/               # 自定义Hooks
+│   ├── useEnhancedStorage.js  # 增强存储Hook
+│   └── useTaskPerformance.js  # 性能优化Hook
+├── services/            # 服务层
+│   ├── syncService.js   # 数据同步服务
+│   └── apiService.js    # API服务模拟
 ├── utils/               # 工具函数
-│   └── storage.js       # 本地存储工具
+│   ├── storage.js       # 本地存储工具
+│   ├── indexedDB.js     # IndexedDB操作工具
+│   └── encryption.js    # 数据加密工具
+├── examples/            # 使用示例
+│   └── TaskManagerExample.js  # 任务管理示例
 ├── App.js               # 主应用组件
 └── index.js             # 入口文件
 ```
@@ -77,3 +98,4 @@ src/
 - 单人开发可控：技术栈轻量且模块化，支持分阶段迭代
 - 实用性优先：功能聚焦"真实使用场景"，避免冗余设计
 - 人性化体验：从操作、情绪、习惯多维度适配用户
+- 现代化架构：采用Zustand状态管理，提升性能和可维护性

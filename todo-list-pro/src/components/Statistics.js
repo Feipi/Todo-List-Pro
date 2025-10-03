@@ -3,19 +3,22 @@ import { Card, Tabs } from 'antd';
 import BasicStatistics from './BasicStatistics';
 import AnalyticsReport from './AnalyticsReport';
 import TrendAnalysis from './TrendAnalysis';
+import useTaskPerformance from '../hooks/useTaskPerformance';
 
 const { TabPane } = Tabs;
 
 const Statistics = () => {
+  const { taskStatistics } = useTaskPerformance();
+  
   return (
     <div>
       <Card title="统计分析" style={{ margin: '20px 0' }}>
         <Tabs defaultActiveKey="1">
           <TabPane tab="基础统计" key="1">
-            <BasicStatistics />
+            <BasicStatistics statistics={taskStatistics} />
           </TabPane>
           <TabPane tab="分析报告" key="2">
-            <AnalyticsReport />
+            <AnalyticsReport statistics={taskStatistics} />
           </TabPane>
           <TabPane tab="趋势分析" key="3">
             <TrendAnalysis />

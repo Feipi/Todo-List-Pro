@@ -4,7 +4,7 @@ import { DeleteOutlined, CheckOutlined, TagOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 
-const BatchOperations = ({ selectedTasks, tasks, setTasks, tags }) => {
+const BatchOperations = ({ selectedTasks, deleteTasks, updateTasks, tags }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [operation, setOperation] = useState('');
   const [newPriority, setNewPriority] = useState('medium');
@@ -12,49 +12,45 @@ const BatchOperations = ({ selectedTasks, tasks, setTasks, tags }) => {
 
   // 批量删除任务
   const batchDelete = () => {
-    const newTasks = tasks.filter(task => !selectedTasks.includes(task.id));
-    setTasks(newTasks);
+    deleteTasks(selectedTasks);
     message.success(`成功删除 ${selectedTasks.length} 个任务`);
     setIsModalVisible(false);
   };
 
   // 批量标记完成
   const batchMarkComplete = () => {
-    const newTasks = tasks.map(task => 
-      selectedTasks.includes(task.id) ? { ...task, completed: true } : task
-    );
-    setTasks(newTasks);
+    updateTasks(selectedTasks, { completed: true });
     message.success(`成功标记 ${selectedTasks.length} 个任务为已完成`);
     setIsModalVisible(false);
   };
 
   // 批量设置优先级
   const batchSetPriority = () => {
-    const newTasks = tasks.map(task => 
-      selectedTasks.includes(task.id) ? { ...task, priority: newPriority } : task
-    );
-    setTasks(newTasks);
+    updateTasks(selectedTasks, { priority: newPriority });
     message.success(`成功为 ${selectedTasks.length} 个任务设置优先级`);
     setIsModalVisible(false);
   };
 
   // 批量添加标签
   const batchAddTags = () => {
-    const newTasks = tasks.map(task => {
-      if (selectedTasks.includes(task.id)) {
-        // 合并现有标签和新标签，去重
-        const updatedTagIds = [...new Set([...(task.tagIds || []), ...newTagIds])];
-        return { ...task, tagIds: updatedTagIds };
-      }
-      return task;
+    // 为每个选中的任务添加标签
+    updateTasks(selectedTasks, (task) => {
+      // 合并现有标签和新标签，去重
+      const updatedTagIds = [...new Set([...(task.tagIds || []), ...newTagIds])];
+      return { ...task, tagIds: updatedTagIds };
     });
-    setTasks(newTasks);
+    
     message.success(`成功为 ${selectedTasks.length} 个任务添加标签`);
     setIsModalVisible(false);
   };
 
   // 执行操作
   const executeOperation = () => {
+    if (selectedTasks.length === 0) {
+      message.warning('请先选择任务');
+      return;
+    }
+    
     switch (operation) {
       case 'delete':
         batchDelete();

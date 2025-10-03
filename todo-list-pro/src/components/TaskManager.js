@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, List, Typography, Input, DatePicker, Checkbox, Select, TimePicker, message, Tag, Collapse, Modal, Tabs } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined, SearchOutlined, CopyOutlined, UnorderedListOutlined, BellOutlined, ShareAltOutlined, AudioOutlined } from '@ant-design/icons';
-import { saveTasksToLocalStorage, loadTasksFromLocalStorage, loadTagsFromLocalStorage } from '../utils/storage';
+import useTodoStore from '../store/todoStore';
+import useEnhancedStorage from '../hooks/useEnhancedStorage';
 import moment from 'moment';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -206,8 +207,41 @@ const TaskItem = ({ task, index, moveTask, startEdit, deleteTask, toggleComplete
 };
 
 const TaskManager = () => {
-  const [tasks, setTasks] = useState([]);
-  const [tags, setTags] = useState([]); // 标签列表
+  // 使用Zustand store
+  const tasks = useTodoStore(state => state.tasks);
+  const tags = useTodoStore(state => state.tags);
+  const addTaskToStore = useTodoStore(state => state.addTask);
+  const updateTaskInStore = useTodoStore(state => state.updateTask);
+  const deleteTaskFromStore = useTodoStore(state => state.deleteTask);
+  const toggleCompleteInStore = useTodoStore(state => state.toggleComplete);
+  const moveTaskInStore = useTodoStore(state => state.moveTask);
+  const batchUpdateTasksInStore = useTodoStore(state => state.batchUpdateTasks);
+  
+  // 定义批量操作函数
+  const deleteTasks = (taskIds) => {
+    taskIds.forEach(id => deleteTaskFromStore(id));
+  };
+  
+  const updateTasks = (taskIds, updates) => {
+    if (typeof updates === 'function') {
+      // 如果updates是函数，则为每个任务调用该函数
+      const currentTasks = useTodoStore.getState().tasks;
+      taskIds.forEach(id => {
+        const task = currentTasks.find(t => t.id === id);
+        if (task) {
+          const updatedTask = updates(task);
+          updateTaskInStore(id, updatedTask);
+        }
+      });
+    } else {
+      // 如果updates是对象，则直接应用更新
+      taskIds.forEach(id => updateTaskInStore(id, updates));
+    }
+  };
+  
+  // 使用增强存储hook
+  const { loadFromPersistentStorage, performSynchronization } = useEnhancedStorage();
+  
   const [searchText, setSearchText] = useState(''); // 搜索文本
   const [selectedTag, setSelectedTag] = useState('all'); // 选中的标签
   const [selectedTasks, setSelectedTasks] = useState([]); // 选中的任务
@@ -244,33 +278,15 @@ const TaskManager = () => {
   // 为每个任务创建独立的ref，避免findDOMNode问题
   const taskRefs = useRef({});
 
-  // 组件挂载时从LocalStorage加载任务和标签
+  // 组件挂载时加载数据
   useEffect(() => {
-    const loadedTasks = loadTasksFromLocalStorage();
-    setTasks(loadedTasks);
-    
-    // 加载标签
-    const loadedTags = loadTagsFromLocalStorage();
-    setTags(loadedTags);
+    loadFromPersistentStorage();
     
     // 聚焦到标题输入框
     if (titleInputRef.current) {
       titleInputRef.current.focus();
     }
-    
-    // 添加窗口焦点事件监听器，当用户回到页面时重新加载任务
-    const handleFocus = () => {
-      const loadedTasks = loadTasksFromLocalStorage();
-      setTasks(loadedTasks);
-    };
-    
-    window.addEventListener('focus', handleFocus);
-    
-    // 清理事件监听器
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
+  }, [loadFromPersistentStorage]);
 
   // 键盘快捷键处理
   useEffect(() => {
@@ -362,12 +378,7 @@ const TaskManager = () => {
     });
   }, []);
 
-  // 任务数据变化时保存到LocalStorage
-  useEffect(() => {
-    saveTasksToLocalStorage(tasks);
-  }, [tasks]);
-
-  // 检查提醒的副作用
+  // 任务数据变化时检查提醒
   useEffect(() => {
     if (tasks.length > 0) {
       checkReminders(tasks);
@@ -441,7 +452,8 @@ const TaskManager = () => {
         projectId: newTask.projectId,
         comments: newTask.comments || []
       };
-      setTasks([...tasks, task]);
+      // 使用store添加任务
+      addTaskToStore(task);
       setNewTask({ 
         title: '', 
         description: '', 
@@ -459,6 +471,20 @@ const TaskManager = () => {
       if (titleInputRef.current) {
         titleInputRef.current.focus();
       }
+    }
+  };
+
+  // 手动同步数据
+  const handleManualSync = async () => {
+    try {
+      const result = await performSynchronization();
+      if (result.success) {
+        message.success('数据同步成功');
+      } else {
+        message.warning(`同步完成，但有警告: ${result.message}`);
+      }
+    } catch (error) {
+      message.error(`同步失败: ${error.message}`);
     }
   };
 
@@ -510,7 +536,8 @@ const TaskManager = () => {
   };
 
   const deleteTask = (id) => {
-    setTasks(tasks.filter(task => task.id !== id));
+    // 使用store删除任务
+    deleteTaskFromStore(id);
     // 从提醒集合中移除
     remindersRef.current.delete(id);
     // 从选中任务中移除
@@ -518,9 +545,8 @@ const TaskManager = () => {
   };
 
   const toggleComplete = (id) => {
-    setTasks(tasks.map(task => 
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
+    // 使用store切换完成状态
+    toggleCompleteInStore(id);
   };
 
   const startEdit = (task) => {
@@ -533,16 +559,15 @@ const TaskManager = () => {
   };
 
   const saveEdit = () => {
-    setTasks(tasks.map(task => 
-      task.id === editingTask.id ? {
-        ...editingTask,
-        dueDate: editingTask.dueDate ? editingTask.dueDate.format('YYYY-MM-DD') : '',
-        remindTime: editingTask.remindTime ? editingTask.remindTime.format('HH:mm') : '',
-        subTasks: currentSubTasks,
-        dependencies: editingTask.dependencies || [],
-        comments: editingTask.comments || []
-      } : task
-    ));
+    // 使用store更新任务
+    updateTaskInStore(editingTask.id, {
+      ...editingTask,
+      dueDate: editingTask.dueDate ? editingTask.dueDate.format('YYYY-MM-DD') : '',
+      remindTime: editingTask.remindTime ? editingTask.remindTime.format('HH:mm') : '',
+      subTasks: currentSubTasks,
+      dependencies: editingTask.dependencies || [],
+      comments: editingTask.comments || []
+    });
     setEditingTask(null);
     setCurrentSubTasks([]);
   };
@@ -554,10 +579,8 @@ const TaskManager = () => {
 
   // 移动任务位置
   const moveTask = (fromIndex, toIndex) => {
-    const updatedTasks = [...tasks];
-    const [movedTask] = updatedTasks.splice(fromIndex, 1);
-    updatedTasks.splice(toIndex, 0, movedTask);
-    setTasks(updatedTasks);
+    // 使用store移动任务
+    moveTaskInStore(fromIndex, toIndex);
   };
 
   // 选择任务
@@ -642,8 +665,8 @@ const TaskManager = () => {
               </Checkbox>
               <BatchOperations 
                 selectedTasks={selectedTasks} 
-                tasks={tasks} 
-                setTasks={setTasks} 
+                deleteTasks={deleteTasks}
+                updateTasks={updateTasks}
                 tags={tags} 
               />
             </div>

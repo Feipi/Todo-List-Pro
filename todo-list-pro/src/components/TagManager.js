@@ -1,26 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, List, Input, Tag, Popconfirm, message, ColorPicker, Tabs } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { saveTagsToLocalStorage, loadTagsFromLocalStorage } from '../utils/storage';
+import useTodoStore from '../store/todoStore';
+import useEnhancedStorage from '../hooks/useEnhancedStorage';
 import TagCloud from './TagCloud';
 
 const { TabPane } = Tabs;
 
 const TagManager = () => {
-  const [tags, setTags] = useState([]);
+  // 使用Zustand store
+  const tags = useTodoStore(state => state.tags);
+  const addTagToStore = useTodoStore(state => state.addTag);
+  const updateTagInStore = useTodoStore(state => state.updateTag);
+  const deleteTagFromStore = useTodoStore(state => state.deleteTag);
+  
+  // 使用增强存储hook
+  const { loadFromPersistentStorage } = useEnhancedStorage();
+  
   const [newTag, setNewTag] = useState({ name: '', color: '#1890ff' });
   const [editingTag, setEditingTag] = useState(null);
 
-  // 组件挂载时从LocalStorage加载标签
+  // 组件挂载时加载数据
   useEffect(() => {
-    const loadedTags = loadTagsFromLocalStorage();
-    setTags(loadedTags);
-  }, []);
-
-  // 标签数据变化时保存到LocalStorage
-  useEffect(() => {
-    saveTagsToLocalStorage(tags);
-  }, [tags]);
+    loadFromPersistentStorage();
+  }, [loadFromPersistentStorage]);
 
   const addTag = () => {
     if (newTag.name.trim() !== '') {
@@ -35,13 +38,15 @@ const TagManager = () => {
         name: newTag.name,
         color: newTag.color
       };
-      setTags([...tags, tag]);
+      // 使用store添加标签
+      addTagToStore(tag);
       setNewTag({ name: '', color: '#1890ff' });
     }
   };
 
   const deleteTag = (id) => {
-    setTags(tags.filter(tag => tag.id !== id));
+    // 使用store删除标签
+    deleteTagFromStore(id);
   };
 
   const startEdit = (tag) => {
@@ -55,9 +60,8 @@ const TagManager = () => {
       return;
     }
     
-    setTags(tags.map(tag => 
-      tag.id === editingTag.id ? editingTag : tag
-    ));
+    // 使用store更新标签
+    updateTagInStore(editingTag.id, editingTag);
     setEditingTag(null);
   };
 
