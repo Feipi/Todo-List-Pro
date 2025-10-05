@@ -41,7 +41,10 @@
     "electron-start": "concurrently \"npm start\" \"wait-on http://localhost:3000 && electron .\"",
     "electron-dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000 && electron .\"",
     "electron-build": "npm run build && electron-builder",
-    "electron-pack": "electron-builder --win"
+    "electron-pack": "electron-builder --win",
+    "pack-win": "npm run build && electron-builder --win",
+    "pack-mac": "npm run build && electron-builder --mac",
+    "pack-linux": "npm run build && electron-builder --linux"
   },
   "eslintConfig": {
     "extends": [
@@ -77,14 +80,29 @@
       "target": "nsis",
       "icon": "public/favicon.ico"
     },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": "dmg"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility"
+    },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     }
   },
   "devDependencies": {
+    "app-builder-bin": "^4.2.0",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
-    "electron-is-dev": "^3.0.1"
+    "electron": "^22.0.0",
+    "electron-builder": "^24.13.3",
+    "electron-is-dev": "^3.0.1",
+    "wait-on": "^7.2.0"
   }
 }

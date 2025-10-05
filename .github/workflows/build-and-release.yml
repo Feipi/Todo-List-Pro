@@ -1,0 +1,139 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ created ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        npm install --legacy-peer-deps
+        npm install electron electron-builder app-builder-bin --save-dev --legacy-peer-deps
+
+    - name: Build Web App
+      run: npm run build
+
+    - name: Build Windows App
+      run: |
+        npm run electron-pack
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Windows artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-app
+        path: dist/*.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        npm install --legacy-peer-deps
+        npm install electron electron-builder --save-dev --legacy-peer-deps
+
+    - name: Build Web App
+      run: npm run build
+
+    - name: Build MacOS App
+      run: |
+        npm run pack-mac
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload MacOS artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-app
+        path: dist/*.dmg
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        npm install --legacy-peer-deps
+        npm install electron electron-builder --save-dev --legacy-peer-deps
+
+    - name: Build Web App
+      run: npm run build
+
+    - name: Build Linux App
+      run: |
+        npm run pack-linux
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Linux artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-app
+        path: |
+          dist/*.AppImage
+          dist/*.deb
+
+  release:
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'created'
+    steps:
+    - name: Download Windows artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-app
+
+    - name: Download MacOS artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: macos-app
+
+    - name: Download Linux artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-app
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          *.exe
+          *.dmg
+          *.AppImage
+          *.deb
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
